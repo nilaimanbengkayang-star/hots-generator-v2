@@ -2,9 +2,8 @@ export default function handler(req, res) {
   res.status(200).json({
     soal: [
       {
-        no: 1,
-        pertanyaan: "INI TEST MUNCUL",
-        opsi: ["A. OK", "B. OK", "C. OK", "D. OK", "E. OK"],
+        pertanyaan: "Soal test muncul",
+        opsi: ["A. Satu","B. Dua","C. Tiga","D. Empat","E. Lima"],
         kunci: "A"
       }
     ]
