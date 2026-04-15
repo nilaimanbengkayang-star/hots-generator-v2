@@ -1,18 +1,4 @@
 <script>
-let levelAktif = "C4";
-
-function pilihLevel(v) {
-    levelAktif = v;
-    document.querySelectorAll('.bloom-card').forEach(el => el.classList.remove('selected'));
-    document.getElementById(v).classList.add('selected');
-}
-
-function showScreen(name) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-' + name).classList.add('active');
-    window.scrollTo(0,0);
-}
-
 async function gasKeServer() {
     const mapel = document.getElementById('mapel').value;
     const materi = document.getElementById('materi').value;
@@ -21,32 +7,25 @@ async function gasKeServer() {
     const jumlah = document.getElementById('numSoal').value;
     const jenis = document.getElementById('jenisSoal').value;
 
-    if(!mapel || !tp) return alert("Wajib isi Mapel & TP!");
+    if (!mapel || !tp) return alert("Wajib isi Mapel & TP!");
 
     document.getElementById('loader').classList.add('show');
-    const containerHasil = document.getElementById('hasil-box');
-    containerHasil.innerHTML = "";
+    const container = document.getElementById('hasil-box');
+    container.innerHTML = "";
 
-    const fullPrompt = `
-Kamu adalah AI pembuat soal HOTS.
+    const prompt = `
+WAJIB JSON VALID TANPA PENJELASAN
 
-WAJIB:
-- Output HARUS JSON VALID
-- TANPA PENJELASAN
-- TANPA BACKTICK
-- HANYA JSON
-
-FORMAT:
 {
-  "soal":[
-    {
-      "no":1,
-      "stimulus":"...",
-      "pertanyaan":"...",
-      "opsi":["A. ...","B. ...","C. ...","D. ...","E. ..."],
-      "kunci":"A"
-    }
-  ]
+ "soal":[
+  {
+   "no":1,
+   "stimulus":"...",
+   "pertanyaan":"...",
+   "opsi":["A. ...","B. ...","C. ...","D. ...","E. ..."],
+   "kunci":"A"
+  }
+ ]
 }
 
 Buat ${jumlah} soal HOTS
@@ -59,68 +38,75 @@ TP: ${tp}
 `;
 
     try {
-        const res = await fetch('http://localhost:3000/api/generate', {
+        const res = await fetch('/api/generate', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ prompt: fullPrompt })
+            body: JSON.stringify({ prompt })
         });
 
-        const data = await res.json();
-        console.log("DATA:", data);
+        let data = await res.json();
+        console.log("RAW:", data);
 
-        let listSoal = [];
+        // 🔥 NORMALISASI SUPER AMAN
+        let soalList = [];
 
         if (Array.isArray(data)) {
-            listSoal = data;
-        } else if (Array.isArray(data.soal)) {
-            listSoal = data.soal;
+            soalList = data;
+        } else if (data?.soal) {
+            soalList = Array.isArray(data.soal) ? data.soal : [data.soal];
         }
 
-        if (listSoal.length > 0) {
-            let innerContent = "";
-
-            listSoal.forEach((s, idx) => {
-                const stim = s.stimulus || "";
-                const q = s.pertanyaan || "Soal tidak tersedia";
-                const k = s.kunci || "-";
-                let o = s.opsi || [];
-
-                if (!Array.isArray(o)) {
-                    o = Object.entries(o).map(([key, val]) => `${key}. ${val}`);
-                }
-
-                innerContent += `
-                <div class="soal-box">
-                    <div style="color:var(--accent); font-weight:bold; margin-bottom:10px;">NO ${idx+1}</div>
-
-                    ${stim ? `<div style="font-size:13px; opacity:0.7; margin-bottom:10px;">${stim}</div>` : ""}
-
-                    <div style="line-height:1.7; margin-bottom:15px;">${q}</div>
-
-                    <div style="display:grid; gap:8px;">
-                        ${o.map(opt => `<div style="padding:10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px;">${opt}</div>`).join('')}
-                    </div>
-
-                    <div style="margin-top:20px; color:#3ecf8e; font-weight:bold; border-top:1px dashed var(--border); padding-top:10px;">
-                        Kunci: ${k}
-                    </div>
-                </div>`;
-            });
-
-            containerHasil.innerHTML = innerContent;
-            document.getElementById('nav-hasil').style.display = 'block';
-            setTimeout(() => showScreen('hasil'), 200);
-
-        } else {
-            alert("AI tidak mengembalikan data soal. Coba generate ulang.");
+        // 🔥 FALLBACK JIKA KOSONG
+        if (soalList.length === 0) {
+            throw new Error("AI tidak kirim soal");
         }
 
-    } catch(err) {
-        alert("Error: " + err.message);
+        // 🔥 RENDER
+        let html = "";
+
+        soalList.forEach((s, i) => {
+            let opsi = s.opsi || [];
+
+            // handle object → array
+            if (!Array.isArray(opsi)) {
+                opsi = Object.entries(opsi).map(([k,v]) => `${k}. ${v}`);
+            }
+
+            html += `
+            <div class="soal-box">
+                <div style="color:#7c6af7; font-weight:bold;">NO ${i+1}</div>
+
+                ${s.stimulus ? `<div style="opacity:0.7; font-size:13px; margin:10px 0;">${s.stimulus}</div>` : ""}
+
+                <div style="margin-bottom:15px;">${s.pertanyaan}</div>
+
+                ${opsi.map(o => `<div style="padding:8px; border:1px solid #333; margin-bottom:5px;">${o}</div>`).join("")}
+
+                <div style="margin-top:10px; color:#3ecf8e;">Kunci: ${s.kunci}</div>
+            </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        document.getElementById('nav-hasil').style.display = 'block';
+        showScreen('hasil');
+
+    } catch (err) {
+        console.error(err);
+
+        // 🔥 FALLBACK UI (TIDAK ERROR LAGI)
+        container.innerHTML = `
+        <div class="soal-box">
+            <div style="color:red; font-weight:bold;">⚠️ AI ERROR</div>
+            <div style="margin-top:10px;">
+                AI sedang tidak stabil. Klik generate lagi ya bos 🙏
+            </div>
+        </div>
+        `;
+        showScreen('hasil');
+
     } finally {
         document.getElementById('loader').classList.remove('show');
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => pilihLevel('C4'));
 </script>
