@@ -4,13 +4,13 @@
       "no": 1,
       "stimulus": "Diberikan data grafik kenaikan suhu global selama 50 tahun terakhir...",
       "pertanyaan": "Berdasarkan grafik tersebut, analisislah hubungan antara industrialisasi dengan anomali suhu?",
-      "opsi": {
-        "A": "Industrialisasi tidak berpengaruh",
-        "B": "Kenaikan suhu berbanding lurus dengan aktivitas industri",
-        "C": "Suhu menurun saat industri meningkat",
-        "D": "Data tidak valid",
-        "E": "Industri hanya berpengaruh di kutub"
-      },
+      "opsi": [
+        "A. Industrialisasi tidak berpengaruh",
+        "B. Kenaikan suhu berbanding lurus dengan aktivitas industri",
+        "C. Suhu menurun saat industri meningkat",
+        "D. Data tidak valid",
+        "E. Industri hanya berpengaruh di kutub"
+      ],
       "kunci": "B"
     }
   ]
