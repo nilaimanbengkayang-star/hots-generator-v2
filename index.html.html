@@ -1,19 +1,38 @@
 <script>
+let levelAktif = "C4";
+
+function pilihLevel(v) {
+    levelAktif = v;
+    document.querySelectorAll('.bloom-card').forEach(el => el.classList.remove('selected'));
+    const el = document.getElementById(v);
+    if (el) el.classList.add('selected');
+}
+
+function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + name);
+    if (target) target.classList.add('active');
+}
+
 async function gasKeServer() {
-    const mapel = document.getElementById('mapel').value;
-    const materi = document.getElementById('materi').value;
-    const tp = document.getElementById('tp').value;
-    const kelas = document.getElementById('kelas').value;
-    const jumlah = document.getElementById('numSoal').value;
-    const jenis = document.getElementById('jenisSoal').value;
+    try {
+        console.log("START GENERATE");
 
-    if (!mapel || !tp) return alert("Wajib isi Mapel & TP!");
+        const mapel = document.getElementById('mapel')?.value;
+        const materi = document.getElementById('materi')?.value;
+        const tp = document.getElementById('tp')?.value;
+        const kelas = document.getElementById('kelas')?.value;
+        const jumlah = document.getElementById('numSoal')?.value;
+        const jenis = document.getElementById('jenisSoal')?.value;
 
-    document.getElementById('loader').classList.add('show');
-    const container = document.getElementById('hasil-box');
-    container.innerHTML = "";
+        if (!mapel || !tp) {
+            alert("Wajib isi Mapel & TP!");
+            return;
+        }
 
-    const prompt = `
+        document.getElementById('loader')?.classList.add('show');
+
+        const prompt = `
 WAJIB JSON VALID TANPA PENJELASAN
 
 {
@@ -37,17 +56,17 @@ Jenis: ${jenis}
 TP: ${tp}
 `;
 
-    try {
+        console.log("KIRIM KE API...");
+
         const res = await fetch('/api/generate', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ prompt })
         });
 
-        let data = await res.json();
-        console.log("RAW:", data);
+        const data = await res.json();
+        console.log("RESPONSE:", data);
 
-        // 🔥 NORMALISASI SUPER AMAN
         let soalList = [];
 
         if (Array.isArray(data)) {
@@ -56,18 +75,18 @@ TP: ${tp}
             soalList = Array.isArray(data.soal) ? data.soal : [data.soal];
         }
 
-        // 🔥 FALLBACK JIKA KOSONG
-        if (soalList.length === 0) {
-            throw new Error("AI tidak kirim soal");
+        if (!soalList || soalList.length === 0) {
+            throw new Error("Data kosong dari AI");
         }
 
-        // 🔥 RENDER
+        const container = document.getElementById('hasil-box');
+        if (!container) throw new Error("Container tidak ditemukan");
+
         let html = "";
 
         soalList.forEach((s, i) => {
             let opsi = s.opsi || [];
 
-            // handle object → array
             if (!Array.isArray(opsi)) {
                 opsi = Object.entries(opsi).map(([k,v]) => `${k}. ${v}`);
             }
@@ -78,35 +97,42 @@ TP: ${tp}
 
                 ${s.stimulus ? `<div style="opacity:0.7; font-size:13px; margin:10px 0;">${s.stimulus}</div>` : ""}
 
-                <div style="margin-bottom:15px;">${s.pertanyaan}</div>
+                <div style="margin-bottom:15px;">${s.pertanyaan || "-"}</div>
 
                 ${opsi.map(o => `<div style="padding:8px; border:1px solid #333; margin-bottom:5px;">${o}</div>`).join("")}
 
-                <div style="margin-top:10px; color:#3ecf8e;">Kunci: ${s.kunci}</div>
+                <div style="margin-top:10px; color:#3ecf8e;">Kunci: ${s.kunci || "-"}</div>
             </div>
             `;
         });
 
         container.innerHTML = html;
+
         document.getElementById('nav-hasil').style.display = 'block';
         showScreen('hasil');
 
     } catch (err) {
-        console.error(err);
+        console.error("ERROR BESAR:", err);
 
-        // 🔥 FALLBACK UI (TIDAK ERROR LAGI)
-        container.innerHTML = `
-        <div class="soal-box">
-            <div style="color:red; font-weight:bold;">⚠️ AI ERROR</div>
-            <div style="margin-top:10px;">
-                AI sedang tidak stabil. Klik generate lagi ya bos 🙏
+        const container = document.getElementById('hasil-box');
+        if (container) {
+            container.innerHTML = `
+            <div class="soal-box">
+                <div style="color:red; font-weight:bold;">ERROR</div>
+                <div>${err.message}</div>
+                <div style="margin-top:10px;">Buka console (F12) untuk detail</div>
             </div>
-        </div>
-        `;
-        showScreen('hasil');
+            `;
+            showScreen('hasil');
+        }
 
     } finally {
-        document.getElementById('loader').classList.remove('show');
+        document.getElementById('loader')?.classList.remove('show');
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    pilihLevel('C4');
+    console.log("APP READY");
+});
 </script>
