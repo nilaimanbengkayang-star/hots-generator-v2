@@ -1,5 +1,10 @@
 {
-  "routes": [
-    { "src": "/", "dest": "/public/index.html" }
+  "soal": [
+    {
+      "no": 1,
+      "pertanyaan": "Contoh soal tampil",
+      "opsi": ["A. 1", "B. 2", "C. 3", "D. 4", "E. 5"],
+      "kunci": "A"
+    }
   ]
 }
