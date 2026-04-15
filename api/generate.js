@@ -12,8 +12,7 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7 }
+          contents: [{ parts: [{ text: prompt }] }]
         })
       }
     );
@@ -22,19 +21,25 @@ export default async function handler(req, res) {
 
     let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    // bersihin
     text = text.replace(/```json/g, "").replace(/```/g, "").trim();
 
     const start = text.indexOf("{");
     const end = text.lastIndexOf("}");
 
-    let json = text.substring(start, end + 1);
+    let jsonString = text.substring(start, end + 1);
 
     try {
-      const parsed = JSON.parse(json);
+      const parsed = JSON.parse(jsonString);
       return res.status(200).json(parsed);
     } catch {
-      return res.status(200).json({ soal: [] }); // fallback
+      return res.status(200).json({
+        soal: [{
+          no: 1,
+          pertanyaan: "AI gagal, coba generate lagi",
+          opsi: [],
+          kunci: "-"
+        }]
+      });
     }
 
   } catch (err) {
