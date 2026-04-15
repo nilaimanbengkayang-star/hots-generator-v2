@@ -1,6 +1,17 @@
-// ... kode fetch ke gemini ...
-const resultText = data.candidates[0].content.parts[0].text;
-// Kadang AI ngasih markdown ```json, kita bersihkan dulu
-const cleanJson = resultText.replace(/```json|```/g, '').trim();
-const resultJson = JSON.parse(cleanJson);
-res.status(200).json(resultJson);
+{
+  "soal": [
+    {
+      "no": 1,
+      "stimulus": "Diberikan data grafik kenaikan suhu global selama 50 tahun terakhir...",
+      "pertanyaan": "Berdasarkan grafik tersebut, analisislah hubungan antara industrialisasi dengan anomali suhu?",
+      "opsi": {
+        "A": "Industrialisasi tidak berpengaruh",
+        "B": "Kenaikan suhu berbanding lurus dengan aktivitas industri",
+        "C": "Suhu menurun saat industri meningkat",
+        "D": "Data tidak valid",
+        "E": "Industri hanya berpengaruh di kutub"
+      },
+      "kunci": "B"
+    }
+  ]
+}
