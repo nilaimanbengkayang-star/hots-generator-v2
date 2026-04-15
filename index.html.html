@@ -130,56 +130,52 @@ function showScreen(name) {
     document.getElementById('screen-' + name).classList.add('active');
 }
 
-async function eksekusiGenerate() {
-    const mapel = document.getElementById('mapel').value;
-    const tp = document.getElementById('tp').value;
-    const num = document.getElementById('numSoal').value;
+async function doGenerate() {
+  const err = validate();
+  if (err) { alert(err); return; }
 
-    if (!mapel || !tp || !levelTerpilih) {
-        alert("Waduh Bos, isian Mapel, TP, dan Level Bloom jangan dikosongin!");
-        return;
-    }
+  const mapel = document.getElementById('mapel').value.trim();
+  const kelas = document.getElementById('kelas').value;
+  const tp = document.getElementById('tp').value.trim();
+  const materi = document.getElementById('materi').value.trim();
+  const jenisList = [...selectedJenis].map(jenisMap).join(', ');
 
-    const loader = document.getElementById('loader');
-    loader.classList.add('show');
+  setLoading(true);
+  document.getElementById('gen-btn').disabled = true;
 
-    try {
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                prompt: `Buatkan ${num} soal HOTS ${mapel} level ${levelTerpilih} dengan TP: ${tp}. Format JSON murni: {"soal": [{"no": 1, "stimulus": "...", "pertanyaan": "...", "opsi": {"A": "...", "B": "...", "C": "...", "D": "...", "E": "..."}, "kunci": "A"}]}`
-            })
-        });
+  // Prompt yang sudah disesuaikan
+  const promptText = `Buatkan ${numSoal} soal HOTS Mapel: ${mapel}, Materi: ${materi}, Kelas: ${kelas}, TP: ${tp}, Level: ${selectedBloom}, Jenis: ${jenisList}. 
+  Wajib format JSON murni: {
+    "kisi": [{"no": 1, "cp": "...", "tp": "...", "materi": "...", "kelas": "...", "indikator": "...", "level": "..."}],
+    "soal": [{"no": 1, "jenis": "pg", "stem": "...", "opsi": ["A. ...", "B. ..."], "kunci": ["A"]}],
+    "pembahasan": [{"no": 1, "alasan_benar": "...", "alasan_salah": {"B": "..."}}]
+  }`;
 
-        const data = await response.json();
-        
-        if (!response.ok) throw new Error(data.error || "Gagal!");
+  try {
+    // MENGARAH KE BACKEND SENDIRI, BUKAN KE ANTHROPIC
+    const resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: promptText })
+    });
 
-        let html = "";
-        data.soal.forEach(s => {
-            html += `
-                <div class="soal-item">
-                    <div style="color: var(--accent); font-weight: bold; margin-bottom: 10px;">SOAL NO ${s.no}</div>
-                    <p style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; font-style: italic; margin-bottom: 15px; border: 1px solid var(--border);">${s.stimulus}</p>
-                    <p style="font-weight: 500; margin-bottom: 15px;">${s.pertanyaan}</p>
-                    <div style="display: grid; gap: 8px;">
-                        ${Object.entries(s.opsi).map(([k,v]) => `<div><strong>${k}.</strong> ${v}</div>`).join('')}
-                    </div>
-                    <div style="margin-top: 15px; color: #3ecf8e; font-weight: bold;">Kunci Jawaban: ${s.kunci}</div>
-                </div>
-            `;
-        });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || "Gagal mengambil data");
 
-        document.getElementById('hasil-konten').innerHTML = html;
-        showScreen('hasil');
-        document.getElementById('nav-hasil').style.display = 'block';
+    lastResult = { data: data, mapel, kelas, tp, materi, bloom: selectedBloom, jenis: [...selectedJenis], ts: new Date() };
+    riwayat.unshift(lastResult);
+    renderOutput(lastResult);
+    showScreen('hasil');
+    document.getElementById('nav-hasil').style.display = 'flex';
+    document.getElementById('badge-soal').textContent = (data.soal || []).length;
 
-    } catch (err) {
-        alert("Error Bos: " + err.message);
-    } finally {
-        loader.classList.remove('show');
-    }
+  } catch(e) {
+    alert("Error Bos: " + e.message);
+    console.error(e);
+  } finally {
+    setLoading(false);
+    document.getElementById('gen-btn').disabled = false;
+  }
 }
 </script>
 </body>
