@@ -4,13 +4,15 @@ export default async function handler(req, res) {
   const API_KEY = process.env.GEMINI_API_KEY;
 
   try {
+    // Menggunakan v1beta dengan endpoint yang benar-benar stabil
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.8 }
+        contents: [{ parts: [{ text: prompt + ". Balas hanya dengan JSON murni tanpa kata-kata lain." }] }],
+        generationConfig: { temperature: 1.0 } // Dinaikkan sedikit agar lebih kreatif tapi tetap dalam format
       })
     });
 
@@ -19,18 +21,18 @@ export default async function handler(req, res) {
 
     let rawText = data.candidates[0].content.parts[0].text;
     
-    // RADAR JSON: Mencari teks yang berada di antara kurung kurawal { ... }
+    // REGEX RADAR: Menangkap apa pun di dalam kurung kurawal { ... }
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
     
     if (jsonMatch) {
       try {
-        const cleanJson = JSON.parse(jsonMatch[0]);
-        res.status(200).json(cleanJson);
+        const parsed = JSON.parse(jsonMatch[0]);
+        res.status(200).json(parsed);
       } catch (e) {
-        res.status(500).json({ error: "Format JSON AI Rusak", raw: rawText });
+        res.status(500).json({ error: "JSON Corrupted", raw: rawText });
       }
     } else {
-      res.status(500).json({ error: "AI tidak mengirim format JSON", raw: rawText });
+      res.status(500).json({ error: "No JSON found", raw: rawText });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
