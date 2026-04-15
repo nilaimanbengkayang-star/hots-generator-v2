@@ -10,23 +10,27 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7 }
+        generationConfig: { temperature: 0.8 }
       })
     });
 
     const data = await response.json();
     if (!response.ok) return res.status(response.status).json({ error: data.error?.message });
 
-    let resultText = data.candidates[0].content.parts[0].text;
+    let rawText = data.candidates[0].content.parts[0].text;
     
-    // MEMBERSIHKAN TEKS DARI MARKDOWN ```json ... ```
-    const cleanJson = resultText.replace(/```json|```/gi, "").trim();
+    // RADAR JSON: Mencari teks yang berada di antara kurung kurawal { ... }
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
     
-    try {
-      res.status(200).json(JSON.parse(cleanJson));
-    } catch (e) {
-      // Jika AI bandel tidak kasih JSON, kita paksa bungkus agar frontend tidak crash
-      res.status(200).json({ soal: [{ pertanyaan: resultText, kunci: "Cek Manual" }] });
+    if (jsonMatch) {
+      try {
+        const cleanJson = JSON.parse(jsonMatch[0]);
+        res.status(200).json(cleanJson);
+      } catch (e) {
+        res.status(500).json({ error: "Format JSON AI Rusak", raw: rawText });
+      }
+    } else {
+      res.status(500).json({ error: "AI tidak mengirim format JSON", raw: rawText });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
