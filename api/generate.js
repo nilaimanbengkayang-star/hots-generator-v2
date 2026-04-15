@@ -5,10 +5,11 @@ export default async function handler(req, res) {
   const API_KEY = process.env.GEMINI_API_KEY;
 
   if (!API_KEY) {
-    return res.status(500).json({ error: 'API Key GEMINI_API_KEY tidak ditemukan di Vercel Settings' });
+    return res.status(500).json({ error: 'API Key tidak ditemukan di Vercel' });
   }
 
   try {
+    // URL API diperbaiki ke v1beta menggunakan model gemini-1.5-flash
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -27,17 +28,10 @@ export default async function handler(req, res) {
       return res.status(response.status).json({ error: data.error?.message || "Gemini API Error" });
     }
 
-    // Ambil teks mentah dari Gemini
-    let resultText = data.candidates[0].content.parts[0].text;
-
-    // MEMBERSIHKAN TEKS: Kadang AI ngasih ```json ... ```, kita buang itu biar jadi JSON murni
-    const cleanJsonText = resultText.replace(/```json|```/gi, "").trim();
-    
-    // Kirim balik sebagai objek JSON ke browser
-    res.status(200).json(JSON.parse(cleanJsonText));
+    const resultText = data.candidates[0].content.parts[0].text;
+    res.status(200).json(JSON.parse(resultText));
 
   } catch (err) {
-    console.error("Backend Error:", err);
-    res.status(500).json({ error: "Gagal memproses AI", detail: err.message });
+    res.status(500).json({ error: "Gagal memproses data", detail: err.message });
   }
 }
