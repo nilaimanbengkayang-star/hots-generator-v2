@@ -1,17 +1,5 @@
 {
-  "soal": [
-    {
-      "no": 1,
-      "stimulus": "Diberikan data grafik kenaikan suhu global...",
-      "pertanyaan": "Analisis hubungan industrialisasi dengan suhu!",
-      "opsi": [
-        "A. Tidak berpengaruh",
-        "B. Berbanding lurus",
-        "C. Menurun",
-        "D. Tidak valid",
-        "E. Hanya di kutub"
-      ],
-      "kunci": "B"
-    }
+  "routes": [
+    { "src": "/", "dest": "/public/index.html" }
   ]
 }
