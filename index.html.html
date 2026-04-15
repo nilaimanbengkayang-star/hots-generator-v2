@@ -166,13 +166,23 @@ async function gasKeServer() {
         const data = await res.json();
         
         let html = "";
-        data.soal.forEach(s => {
-            html += `<div class="soal-box">
-                <b>No ${s.no}</b> [${jenis}]<br><br>
-                ${s.pertanyaan}<br><br>
-                ${s.opsi ? s.opsi.map(o => `<div>${o}</div>`).join('') : ''}
-                <div style="color:#3ecf8e; margin-top:10px; font-weight:bold;">Kunci: ${s.kunci}</div>
-            </div>`;
+        // Ganti bagian render di dalam fungsi gasKeServer Bos dengan ini:
+if (data && data.soal && Array.isArray(data.soal)) {
+    let html = "";
+    data.soal.forEach(s => {
+        html += `<div class="soal-box">
+            <b>No ${s.no || '-'}</b> [${jenis}]<br><br>
+            ${s.pertanyaan || s.stem || 'Soal tidak terbaca'}<br><br>
+            ${s.opsi ? (Array.isArray(s.opsi) ? s.opsi.map(o => `<div>${o}</div>`).join('') : Object.values(s.opsi).map(v => `<div>${v}</div>`).join('')) : ''}
+            <div style="color:#3ecf8e; margin-top:10px; font-weight:bold;">Kunci: ${s.kunci || '-'}</div>
+        </div>`;
+    });
+    document.getElementById('hasil-box').innerHTML = html;
+    showScreen('hasil');
+    document.getElementById('nav-hasil').style.display = 'block';
+} else {
+    throw new Error("Format data soal tidak dikenali AI");
+}
         });
         document.getElementById('hasil-box').innerHTML = html;
         showScreen('hasil');
