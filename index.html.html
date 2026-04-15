@@ -126,44 +126,50 @@ function showScreen(name) {
 }
 
 async function doGenerate() {
-    const mapel = document.getElementById('mapel').value;
-    const tp = document.getElementById('tp').value;
-    const num = document.getElementById('numSoal').value;
+  const err = validate();
+  if (err) { alert(err); return; }
 
-    if(!mapel || !selectedBloom || !tp) {
-        alert("Harap lengkapi semua isian, Bos!");
-        return;
-    }
+  const mapel = document.getElementById('mapel').value.trim();
+  const kelas = document.getElementById('kelas').value;
+  const tp = document.getElementById('tp').value.trim();
+  const materi = document.getElementById('materi').value.trim();
+  const jenisList = [...selectedJenis].map(jenisMap).join(', ');
 
-    const loader = document.getElementById('loader');
-    const btn = document.getElementById('gen-btn');
+  setLoading(true);
+  document.getElementById('gen-btn').disabled = true;
+
+  // Prompt yang dikirim ke API internal kita
+  const promptText = `Buatkan ${numSoal} soal HOTS Mapel: ${mapel}, Kelas: ${kelas}, Materi: ${materi}, TP: ${tp}, Level: ${selectedBloom}, Jenis: ${jenisList}. 
+  Wajib berikan respon dalam format JSON murni: 
+  {"kisi": [{"no": 1, "cp": "...", "tp": "...", "materi": "...", "kelas": "...", "indikator": "...", "level": "..."}], 
+   "soal": [{"no": 1, "jenis": "pg", "stem": "...", "opsi": ["A. ..", "B. .."], "kunci": ["A"]}], 
+   "pembahasan": [{"no": 1, "alasan_benar": "...", "alasan_salah": {"B": "..."}}]}`;
+
+  try {
+    // MEMANGGIL API INTERNAL VERCEL (Bukan langsung ke Anthropic/Gemini)
+    const resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: promptText })
+    });
+
+    if (!resp.ok) throw new Error("Gagal mengambil data dari server");
     
-    loader.classList.add('show');
-    btn.disabled = true;
+    const parsed = await resp.json();
 
-    // Prompt ini yang akan dikirim ke Backend Gemini Bos
-    const fullPrompt = `Buatkan ${num} soal HOTS untuk Mapel: ${mapel}, TP: ${tp}, Level: ${selectedBloom}. 
-    Wajib format JSON murni: {"soal": [{"no": 1, "stimulus": "...", "pertanyaan": "...", "opsi": {"A": "...", "B": "...", "C": "...", "D": "...", "E": "..."}, "kunci": "A"}]}`;
+    lastResult = { data: parsed, mapel, kelas, tp, materi, bloom: selectedBloom, jenis: [...selectedJenis], ts: new Date() };
+    riwayat.unshift(lastResult);
+    renderOutput(lastResult);
+    showScreen('hasil');
+    document.getElementById('nav-hasil').style.display = 'flex';
+    document.getElementById('badge-soal').textContent = (parsed.soal || []).length;
 
-    try {
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: fullPrompt })
-        });
-
-        if (!response.ok) throw new Error("Gagal mengambil data dari server");
-        
-        const data = await response.json();
-        renderHasil(data);
-        showScreen('hasil');
-        document.getElementById('nav-hasil').style.display = 'block';
-    } catch (err) {
-        alert("Aduh Bos, ada error: " + err.message);
-    } finally {
-        loader.classList.remove('show');
-        btn.disabled = false;
-    }
+  } catch(e) {
+    alert("Aduh Bos, ada error: " + e.message);
+  } finally {
+    setLoading(false);
+    document.getElementById('gen-btn').disabled = false;
+  }
 }
 
 function renderHasil(data) {
