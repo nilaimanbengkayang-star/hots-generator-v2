@@ -85,49 +85,77 @@ function showScreen(name) {
     document.getElementById('screen-' + name).classList.add('active');
 }
 
+// --- BAGIAN LOGIKA JAVASCRIPT ---
 async function doGenerate() {
-    const mapel = document.getElementById('mapel').value;
-    const tp = document.getElementById('tp').value;
-    if(!mapel || !selectedBloom) return alert("Lengkapi data!");
+  // Ambil data dari input Bos
+  const mapel = document.getElementById('mapel').value;
+  const tp = document.getElementById('tp').value;
+  const materi = document.getElementById('materi').value;
+  const jumlah = document.getElementById('numSoal').value;
 
-    document.getElementById('loader').classList.add('show');
-    
-    try {
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                prompt: `Buat 3 soal HOTS ${mapel} level ${selectedBloom} materi ${document.getElementById('materi').value} dengan TP: ${tp}. Format JSON: {"soal": [{"no": 1, "stimulus": "...", "pertanyaan": "...", "opsi": {"A": "...", "B": "...", "C": "...", "D": "...", "E": "..."}, "kunci": "A"}]}`
-            })
-        });
+  if(!mapel || !selectedBloom) {
+    alert("Isi dulu Mapel dan Level Bloom-nya, Bos!");
+    return;
+  }
 
-        const data = await response.json();
-        if(!response.ok) throw new Error(data.error || "Gagal");
+  // Tampilkan loading
+  document.getElementById('loader').classList.add('show');
 
-        renderHasil(data);
-        showScreen('hasil');
-        document.getElementById('nav-hasil').style.display = 'block';
-    } catch (e) {
-        alert("Error: " + e.message);
-    } finally {
-        document.getElementById('loader').classList.remove('show');
-    }
+  try {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        // Ini instruksi (prompt) yang dikirim ke AI
+        prompt: `Buatkan ${jumlah} soal HOTS ${mapel} materi ${materi} dengan TP: ${tp}. Level Kognitif: ${selectedBloom}. 
+        Format WAJIB JSON murni: 
+        {
+          "soal": [
+            {
+              "no": 1, 
+              "stimulus": "isi teks/kasus", 
+              "pertanyaan": "isi pertanyaan", 
+              "opsi": {"A": "...", "B": "...", "C": "...", "D": "...", "E": "..."}, 
+              "kunci": "A"
+            }
+          ]
+        }`
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.error || "Gagal dari Server");
+
+    // Fungsi untuk menampilkan hasil ke layar Bos
+    renderHasil(data);
+    showScreen('hasil');
+
+  } catch (error) {
+    console.error(error);
+    alert("Gagal memproses AI: " + error.message);
+  } finally {
+    document.getElementById('loader').classList.remove('show');
+  }
 }
 
 function renderHasil(data) {
-    const box = document.getElementById('hasil-konten');
-    let html = "";
-    data.soal.forEach(s => {
-        html += `<div class="soal-item">
-            <strong>Soal ${s.no}</strong>
-            <p style="margin: 10px 0; font-style: italic; color: var(--text2);">${s.stimulus}</p>
-            <p style="margin-bottom: 10px;">${s.pertanyaan}</p>
-            ${Object.entries(s.opsi).map(([k,v]) => `<div>${k}. ${v}</div>`).join('')}
-            <div style="margin-top:10px; color: #3ecf8e;">Kunci: ${s.kunci}</div>
-        </div>`;
-    });
-    box.innerHTML = html;
+  const container = document.getElementById('hasil-konten');
+  let html = "";
+  
+  // Membaca data JSON yang dikirim AI
+  data.soal.forEach(s => {
+    html += `
+      <div class="soal-item">
+        <div style="color: var(--accent); font-weight: bold;">SOAL NO ${s.no}</div>
+        <p style="font-style: italic; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin: 10px 0;">${s.stimulus}</p>
+        <p><strong>${s.pertanyaan}</strong></p>
+        <div style="margin-top: 10px;">
+          ${Object.entries(s.opsi).map(([k, v]) => `<div>${k}. ${v}</div>`).join('')}
+        </div>
+        <div style="margin-top: 10px; color: #3ecf8e; font-weight: bold;">Kunci: ${s.kunci}</div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
 }
-</script>
-</body>
-</html>
