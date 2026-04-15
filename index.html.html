@@ -115,67 +115,123 @@ input, textarea, select {
 </div>
 
 <script>
-let levelTerpilih = "";
+// --- BAGIAN LOGIKA JAVASCRIPT FIXED ---
+let selectedBloom = 'C4'; 
+let selectedJenis = new Set(['pg']);
+let numSoal = 3;
+let lastResult = null;
+let riwayat = [];
 
-function pilihLevel(val) {
-    levelTerpilih = val;
-    // Reset warna semua kartu
-    document.querySelectorAll('.bloom-card').forEach(card => card.classList.remove('selected'));
-    // Beri warna kartu yang dipilih
-    document.getElementById('btn-' + val).classList.add('selected');
-}
-
+// Fungsi Pindah Layar
 function showScreen(name) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + name);
+  if(target) target.classList.add('active');
+  window.scrollTo(0,0);
 }
 
-async function doGenerate() {
-  const err = validate();
-  if (err) { alert(err); return; }
+// Pilih Level Bloom
+function setBloom(el, val) {
+  document.querySelectorAll('.bloom-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedBloom = val;
+}
 
+// Pilih Jenis Soal
+function toggleJenis(el, val) {
+  if (selectedJenis.has(val)) {
+    if (selectedJenis.size > 1) {
+      selectedJenis.delete(val);
+      el.classList.remove('selected');
+    }
+  } else {
+    selectedJenis.add(val);
+    el.classList.add('selected');
+  }
+}
+
+// Fungsi Loading
+function setLoading(show) {
+  document.getElementById('loader').classList.toggle('show', show);
+}
+
+// --- FUNGSI GENERATE (INTI) ---
+async function doGenerate() {
   const mapel = document.getElementById('mapel').value.trim();
   const kelas = document.getElementById('kelas').value;
   const tp = document.getElementById('tp').value.trim();
   const materi = document.getElementById('materi').value.trim();
-  const jenisList = [...selectedJenis].map(jenisMap).join(', ');
+  const num = document.getElementById('numSoal').value;
+
+  if (!mapel || !tp) {
+    alert("Mohon isi Mata Pelajaran dan Tujuan Pembelajaran!");
+    return;
+  }
 
   setLoading(true);
-  document.getElementById('gen-btn').disabled = true;
+  const btn = document.getElementById('gen-btn');
+  if(btn) btn.disabled = true;
 
-  // Prompt yang sudah disesuaikan
-  const promptText = `Buatkan ${numSoal} soal HOTS Mapel: ${mapel}, Materi: ${materi}, Kelas: ${kelas}, TP: ${tp}, Level: ${selectedBloom}, Jenis: ${jenisList}. 
+  // Prompt JSON untuk Gemini
+  const promptText = `Buatkan ${num} soal HOTS Mapel: ${mapel}, Materi: ${materi}, Kelas: ${kelas}, TP: ${tp}, Level: ${selectedBloom}. 
   Wajib format JSON murni: {
     "kisi": [{"no": 1, "cp": "...", "tp": "...", "materi": "...", "kelas": "...", "indikator": "...", "level": "..."}],
-    "soal": [{"no": 1, "jenis": "pg", "stem": "...", "opsi": ["A. ...", "B. ..."], "kunci": ["A"]}],
+    "soal": [{"no": 1, "jenis": "pg", "stem": "...", "opsi": ["A. ...", "B. ...", "C. ...", "D. ...", "E. ..."], "kunci": ["A"]}],
     "pembahasan": [{"no": 1, "alasan_benar": "...", "alasan_salah": {"B": "..."}}]
   }`;
 
   try {
-    // MENGARAH KE BACKEND SENDIRI, BUKAN KE ANTHROPIC
     const resp = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: promptText })
     });
 
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || "Gagal mengambil data");
+    if (!resp.ok) {
+      const errorData = await resp.json();
+      throw new Error(errorData.error || "Gagal menghubungi server");
+    }
 
-    lastResult = { data: data, mapel, kelas, tp, materi, bloom: selectedBloom, jenis: [...selectedJenis], ts: new Date() };
-    riwayat.unshift(lastResult);
+    const data = await resp.json();
+    
+    // Simpan hasil
+    lastResult = { data, mapel, kelas, tp, materi, bloom: selectedBloom, ts: new Date() };
     renderOutput(lastResult);
     showScreen('hasil');
-    document.getElementById('nav-hasil').style.display = 'flex';
-    document.getElementById('badge-soal').textContent = (data.soal || []).length;
+    
+    const navHasil = document.getElementById('nav-hasil');
+    if(navHasil) navHasil.style.display = 'flex';
 
   } catch(e) {
-    alert("Error Bos: " + e.message);
+    alert("Error: " + e.message);
     console.error(e);
   } finally {
     setLoading(false);
-    document.getElementById('gen-btn').disabled = false;
+    if(btn) btn.disabled = false;
   }
+}
+
+// Fungsi Render ke Layar
+function renderOutput(result) {
+  const container = document.getElementById('hasil-konten');
+  if(!container) return;
+  
+  const data = result.data;
+  let html = "";
+
+  (data.soal || []).forEach((s, idx) => {
+    html += `
+      <div class="card" style="border-left: 4px solid var(--accent);">
+        <div style="color: var(--accent); font-weight: bold; margin-bottom: 10px;">NOMOR ${s.no}</div>
+        <p style="background: var(--bg3); padding: 15px; border-radius: 8px; font-style: italic; margin-bottom: 15px;">${s.stem}</p>
+        <div style="display: grid; gap: 8px;">
+          ${(s.opsi || []).map(o => `<div style="padding: 10px; background: var(--bg4); border-radius: 5px; border: 1px solid var(--border);">${o}</div>`).join('')}
+        </div>
+        <div style="margin-top: 15px; color: #3ecf8e; font-weight: bold;">Kunci: ${s.kunci.join(', ')}</div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
 }
 </script>
 </body>
