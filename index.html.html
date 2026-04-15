@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HOTS Generator — Soal Tingkat Tinggi</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet" />
+<style>
+/* ── CSS ASLI MEWAH DARI FILE BOS ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d0d0f; --bg2: #141418; --bg3: #1c1c22; --border: rgba(255,255,255,0.08);
+  --text: #f0eff4; --text2: #9998a8; --accent: #7c6af7; --radius: 12px;
+}
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+
+.app-container { display: flex; min-height: 100vh; }
+.sidebar { width: 280px; background: var(--bg2); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; }
+.main-content { margin-left: 280px; flex: 1; padding: 40px 60px; }
+
+.screen { display: none; animation: fadeIn 0.4s ease; }
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
+input, textarea, select { 
+    width: 100%; background: var(--bg3); border: 1px solid var(--border); 
+    border-radius: 8px; padding: 12px; color: white; margin-top: 8px; outline: none;
+}
+.btn-gen { 
+    background: var(--accent); color: white; border: none; padding: 16px; 
+    border-radius: var(--radius); width: 100%; font-weight: 600; cursor: pointer;
+    font-family: 'Syne', sans-serif; transition: 0.3s;
+}
+.btn-gen:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.bloom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
+.bloom-card { 
+    background: var(--bg3); border: 1px solid var(--border); padding: 16px; 
+    border-radius: 10px; cursor: pointer; text-align: center;
+}
+.bloom-card.selected { border-color: var(--accent); background: rgba(124,106,247,0.1); }
+
+.loading-overlay { 
+    display: none; position: fixed; inset: 0; background: rgba(13,13,15,0.95); 
+    z-index: 1000; align-items: center; justify-content: center; flex-direction: column;
+}
+.loading-overlay.show { display: flex; }
+
+.soal-item { background: var(--bg3); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loader">
+    <div style="font-family: 'Syne'; font-size: 26px; color: var(--accent);">⚡ Meramu Soal HOTS...</div>
+    <p style="color: var(--text2); margin-top: 10px;">Mohon tunggu, AI sedang bekerja.</p>
+</div>
+
+<div class="app-container">
+    <aside class="sidebar">
+        <h1 style="font-family: 'Syne'; font-size: 24px; margin-bottom: 40px;">HOTS GEN <span style="color: var(--accent);">v2</span></h1>
+        <div style="cursor: pointer; margin-bottom: 20px; color: var(--text2);" onclick="showScreen('generate')">✦ Buat Soal</div>
+        <div id="nav-hasil" style="cursor: pointer; display: none; color: var(--text2);" onclick="showScreen('hasil')">📄 Lihat Hasil</div>
+    </aside>
+
+    <main class="main-content">
+        <div id="screen-generate" class="screen active">
+            <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 30px;">Detail Soal</h2>
+            
+            <div class="card">
+                <label>Mata Pelajaran</label>
+                <input type="text" id="mapel" placeholder="Contoh: Ekonomi">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div>
+                        <label>Kelas</label>
+                        <select id="kelas">
+                            <option value="10">Kelas 10</option>
+                            <option value="11">Kelas 11</option>
+                            <option value="12">Kelas 12</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Jumlah Soal</label>
+                        <input type="number" id="numSoal" value="3" min="1" max="10">
+                    </div>
+                </div>
+
+                <label style="display: block; margin-top: 20px;">Tujuan Pembelajaran (TP)</label>
+                <textarea id="tp" rows="3" placeholder="Contoh: Siswa dapat menganalisis kurva penawaran"></textarea>
+            </div>
+
+            <div class="card">
+                <label>Pilih Level Bloom</label>
+                <div class="bloom-grid">
+                    <div class="bloom-card" onclick="setBloom(this, 'C4')"><strong>C4</strong><br><small>Analisis</small></div>
+                    <div class="bloom-card" onclick="setBloom(this, 'C5')"><strong>C5</strong><br><small>Evaluasi</small></div>
+                    <div class="bloom-card" onclick="setBloom(this, 'C6')"><strong>C6</strong><br><small>Kreasi</small></div>
+                </div>
+            </div>
+
+            <button class="btn-gen" id="gen-btn" onclick="doGenerate()">GENERATE SOAL</button>
+        </div>
+
+        <div id="screen-hasil" class="screen">
+            <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 20px;">Hasil Generate</h2>
+            <div id="hasil-konten"></div>
+            <button class="btn-gen" style="background: var(--bg3); margin-top: 20px;" onclick="showScreen('generate')">BUAT LAGI</button>
+        </div>
+    </main>
+</div>
+
+<script>
+let selectedBloom = null;
+
+function setBloom(el, val) {
+    document.querySelectorAll('.bloom-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedBloom = val;
+}
+
+function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+}
+
+async function doGenerate() {
+    const mapel = document.getElementById('mapel').value;
+    const tp = document.getElementById('tp').value;
+    const num = document.getElementById('numSoal').value;
+
+    if(!mapel || !selectedBloom || !tp) {
+        alert("Harap lengkapi semua isian, Bos!");
+        return;
+    }
+
+    const loader = document.getElementById('loader');
+    const btn = document.getElementById('gen-btn');
+    
+    loader.classList.add('show');
+    btn.disabled = true;
+
+    // Prompt ini yang akan dikirim ke Backend Gemini Bos
+    const fullPrompt = `Buatkan ${num} soal HOTS untuk Mapel: ${mapel}, TP: ${tp}, Level: ${selectedBloom}. 
+    Wajib format JSON murni: {"soal": [{"no": 1, "stimulus": "...", "pertanyaan": "...", "opsi": {"A": "...", "B": "...", "C": "...", "D": "...", "E": "..."}, "kunci": "A"}]}`;
+
+    try {
+        const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: fullPrompt })
+        });
+
+        if (!response.ok) throw new Error("Gagal mengambil data dari server");
+        
+        const data = await response.json();
+        renderHasil(data);
+        showScreen('hasil');
+        document.getElementById('nav-hasil').style.display = 'block';
+    } catch (err) {
+        alert("Aduh Bos, ada error: " + err.message);
+    } finally {
+        loader.classList.remove('show');
+        btn.disabled = false;
+    }
+}
+
+function renderHasil(data) {
+    const box = document.getElementById('hasil-konten');
+    let html = "";
+    if(!data.soal) return box.innerHTML = "<p>Data soal tidak ditemukan.</p>";
+    
+    data.soal.forEach(s => {
+        html += `
+            <div class="soal-item">
+                <div style="color: var(--accent); font-weight: bold; margin-bottom: 12px;">BUTIR SOAL NO ${s.no}</div>
+                <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; font-style: italic; margin-bottom: 15px; border: 1px solid var(--border);">${s.stimulus}</div>
+                <p style="font-weight: 500; margin-bottom: 15px; line-height: 1.6;">${s.pertanyaan}</p>
+                <div style="display: grid; gap: 10px; font-size: 14px;">
+                    ${Object.entries(s.opsi).map(([k, v]) => `<div><strong>${k}.</strong> ${v}</div>`).join('')}
+                </div>
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border); color: #3ecf8e; font-size: 14px; font-weight: bold;">
+                    Kunci Jawaban: ${s.kunci}
+                </div>
+            </div>
+        `;
+    });
+    box.innerHTML = html;
+}
+</script>
+</body>
+</html>
