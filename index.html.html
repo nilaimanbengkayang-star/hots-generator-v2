@@ -3,68 +3,41 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HOTS Generator Pro v4 — Final Stable</title>
+<title>HOTS Generator Pro v5 — Final Boss</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
-/* --- CSS TETAP MEWAH --- */
+/* CSS MASTER */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #0d0d0f; --bg2: #141418; --bg3: #1c1c22; --border: rgba(255,255,255,0.08);
-  --text: #f0eff4; --text2: #9998a8; --accent: #7c6af7; --radius: 12px;
-}
+:root { --bg: #0d0d0f; --bg2: #141418; --bg3: #1c1c22; --border: rgba(255,255,255,0.08); --text: #f0eff4; --accent: #7c6af7; --radius: 12px; }
 body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
 .app-container { display: flex; min-height: 100vh; }
 .sidebar { width: 280px; background: var(--bg2); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; z-index: 100; }
 .main-content { margin-left: 280px; flex: 1; padding: 40px 60px; max-width: 1200px; }
-
-/* Navigation */
 .nav-item { cursor: pointer; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; transition: 0.2s; }
 .nav-item:hover { background: var(--bg3); color: var(--accent); }
-
-/* Screens Logic */
 .screen { display: none; }
 .screen.active { display: block !important; animation: fadeIn 0.4s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-/* Form & Cards */
 .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
-input, textarea, select { 
-    width: 100%; background: var(--bg3); border: 1px solid var(--border); 
-    border-radius: 8px; padding: 12px; color: white; outline: none; margin-bottom: 15px;
-}
-
-/* Bloom Grid */
+input, textarea, select { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: white; outline: none; margin-bottom: 15px; }
 .bloom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.bloom-card { 
-    background: var(--bg3); border: 1px solid var(--border); padding: 15px 5px; 
-    border-radius: 10px; cursor: pointer; text-align: center; transition: 0.2s;
-}
+.bloom-card { background: var(--bg3); border: 1px solid var(--border); padding: 15px 5px; border-radius: 10px; cursor: pointer; text-align: center; transition: 0.2s; font-size: 14px; }
 .bloom-card.selected { border: 2px solid var(--accent) !important; background: rgba(124,106,247,0.2) !important; }
-
-.btn-gen { 
-    background: var(--accent); color: white; border: none; padding: 18px; 
-    border-radius: var(--radius); width: 100%; font-weight: 700; cursor: pointer; font-size: 16px;
-}
-
-/* Loader */
-.loading-overlay { 
-    display: none; position: fixed; inset: 0; background: rgba(13,13,15,0.95); 
-    z-index: 1000; align-items: center; justify-content: center;
-}
+.btn-gen { background: var(--accent); color: white; border: none; padding: 18px; border-radius: var(--radius); width: 100%; font-weight: 700; cursor: pointer; }
+.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(13,13,15,0.95); z-index: 1000; align-items: center; justify-content: center; }
 .loading-overlay.show { display: flex; }
-
-.soal-box { background: var(--bg3); padding: 25px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--accent); }
+.soal-box { background: var(--bg3); padding: 25px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--accent); line-height: 1.6; }
 </style>
 </head>
 <body>
 
 <div class="loading-overlay" id="loader">
-    <div style="font-family: 'Syne'; font-size: 26px; color: var(--accent);">⚡ Meracik Soal...</div>
+    <div style="font-family: 'Syne'; font-size: 26px; color: var(--accent);">⚡ Sedang Memproses Soal...</div>
 </div>
 
 <div class="app-container">
     <aside class="sidebar">
-        <h1 style="font-family: 'Syne'; font-size: 24px; margin-bottom: 40px;">HOTS <span style="color: var(--accent);">V4</span></h1>
+        <h1 style="font-family: 'Syne'; font-size: 24px; margin-bottom: 40px;">HOTS <span style="color: var(--accent);">V5</span></h1>
         <div class="nav-item" onclick="showScreen('generate')">✦ Buat Soal</div>
         <div id="nav-hasil" class="nav-item" style="display: none; color: var(--accent);" onclick="showScreen('hasil')">📄 Lihat Hasil</div>
     </aside>
@@ -73,14 +46,23 @@ input, textarea, select {
         <div id="screen-generate" class="screen active">
             <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 30px;">Generator Soal</h2>
             <div class="card">
-                <input type="text" id="mapel" placeholder="Mata Pelajaran">
+                <label>Mata Pelajaran</label>
+                <input type="text" id="mapel" placeholder="Misal: Biologi">
+                
+                <label>Materi Spesifik</label>
+                <input type="text" id="materi" placeholder="Misal: Pembelahan Sel">
+                
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <input type="text" id="kelas" value="10" placeholder="Kelas">
-                    <input type="number" id="numSoal" value="2">
+                    <div><label>Kelas</label><input type="text" id="kelas" value="10"></div>
+                    <div><label>Jumlah Soal</label><input type="number" id="numSoal" value="2"></div>
                 </div>
-                <textarea id="tp" rows="3" placeholder="Tujuan Pembelajaran"></textarea>
+                
+                <label>Tujuan Pembelajaran (TP)</label>
+                <textarea id="tp" rows="3" placeholder="Paste TP di sini..."></textarea>
             </div>
+
             <div class="card">
+                <label>Level Bloom</label>
                 <div class="bloom-grid">
                     <div class="bloom-card" id="C1" onclick="pilihLevel('C1')">C1</div>
                     <div class="bloom-card" id="C2" onclick="pilihLevel('C2')">C2</div>
@@ -90,11 +72,14 @@ input, textarea, select {
                     <div class="bloom-card" id="C6" onclick="pilihLevel('C6')">C6</div>
                 </div>
             </div>
+
+            <label>Jenis Soal</label>
             <select id="jenisSoal">
                 <option value="Pilihan Ganda">Pilihan Ganda</option>
+                <option value="PG Kompleks">PG Kompleks</option>
                 <option value="Uraian">Uraian</option>
             </select>
-            <button class="btn-gen" onclick="gasKeServer()">GENERATE SEKARANG</button>
+            <button class="btn-gen" onclick="gasKeServer()">GENERATE SOAL SEKARANG</button>
         </div>
 
         <div id="screen-hasil" class="screen">
@@ -115,65 +100,51 @@ function pilihLevel(v) {
 }
 
 function showScreen(name) {
-    // Fungsi navigasi yang lebih "galak"
-    const screens = document.querySelectorAll('.screen');
-    screens.forEach(s => s.classList.remove('active'));
-    
-    const target = document.getElementById('screen-' + name);
-    if(target) {
-        target.classList.add('active');
-        console.log("Pindah ke screen:", name);
-    } else {
-        console.error("Screen tidak ditemukan:", name);
-    }
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    window.scrollTo(0,0);
 }
 
 async function gasKeServer() {
     const mapel = document.getElementById('mapel').value;
+    const materi = document.getElementById('materi').value;
     const tp = document.getElementById('tp').value;
     
-    if(!mapel || !tp) return alert("Lengkapi data!");
+    if(!mapel || !tp) return alert("Mapel & TP wajib diisi Bos!");
 
     document.getElementById('loader').classList.add('show');
+
+    // Prompt diperkuat agar AI tidak keluar jalur
+    const promptText = `Hasilkan ${document.getElementById('numSoal').value} soal ${mapel} materi ${materi} level ${bloomVal} jenis ${document.getElementById('jenisSoal').value}. TP: ${tp}. Output wajib JSON murni: {"soal":[{"pertanyaan":"...","opsi":["A","B","C","D"],"kunci":"..."}]}`;
 
     try {
         const res = await fetch('/api/generate', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                prompt: `Buatkan ${document.getElementById('numSoal').value} soal ${mapel} level ${bloomVal}. TP: ${tp}. Wajib JSON: {"soal":[{"pertanyaan":"...","opsi":["A","B","C","D"],"kunci":"..."}]}`
-            })
+            body: JSON.stringify({ prompt: promptText })
         });
 
         const data = await res.json();
-        const box = document.getElementById('hasil-box');
-        
-        // Cek data soal (bisa .soal atau .questions)
         const list = data.soal || data.questions || [];
 
         if(list.length > 0) {
             let html = "";
-            list.forEach((s, idx) => {
+            list.forEach((s, i) => {
                 html += `<div class="soal-box">
-                    <b>NO ${idx+1}</b><br><br>
+                    <b style="color:var(--accent)">NO ${i+1}</b><br><br>
                     ${s.pertanyaan || s.question}<br><br>
-                    ${s.opsi ? s.opsi.map(o => `<div>• ${o}</div>`).join('') : ''}
-                    <div style="color:cyan; margin-top:10px;">Kunci: ${s.kunci || s.answer}</div>
+                    ${s.opsi ? s.opsi.map(o => `<div style="padding:8px; background:rgba(255,255,255,0.03); margin-top:5px; border-radius:5px;">${o}</div>`).join('') : ''}
+                    <div style="margin-top:15px; color:#3ecf8e; font-weight:bold;">Kunci: ${s.kunci || s.answer}</div>
                 </div>`;
             });
-            box.innerHTML = html;
-            
-            // PAKSA PINDAH SCREEN
-            setTimeout(() => {
-                showScreen('hasil');
-                document.getElementById('nav-hasil').style.display = 'block';
-            }, 100);
-
+            document.getElementById('hasil-box').innerHTML = html;
+            document.getElementById('nav-hasil').style.display = 'block';
+            showScreen('hasil');
         } else {
-            alert("Hasil kosong dari AI, coba lagi Bos.");
+            alert("AI gagal buat JSON. Coba ganti TP-nya atau generate ulang Bos.");
         }
     } catch(e) {
-        alert("Error: " + e.message);
+        alert("Koneksi Error: " + e.message);
     } finally {
         document.getElementById('loader').classList.remove('show');
     }
