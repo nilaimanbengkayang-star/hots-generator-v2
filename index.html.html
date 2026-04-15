@@ -1,89 +1,3 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HOTS Generator Pro v6 — Final Fix</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
-    <style>
-        :root { --bg: #0d0d0f; --bg2: #141418; --bg3: #1c1c22; --border: rgba(255,255,255,0.08); --text: #f0eff4; --accent: #7c6af7; --radius: 12px; }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
-        .app-container { display: flex; min-height: 100vh; }
-        .sidebar { width: 280px; background: var(--bg2); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; z-index: 100; }
-        .main-content { margin-left: 280px; flex: 1; padding: 40px 60px; max-width: 1100px; }
-        .nav-item { cursor: pointer; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; transition: 0.2s; font-weight: 500; }
-        .nav-item:hover { background: var(--bg3); color: var(--accent); }
-        .screen { display: none; }
-        .screen.active { display: block !important; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
-        input, textarea, select { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; color: white; margin-bottom: 15px; outline: none; }
-        .bloom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .bloom-card { background: var(--bg3); border: 1px solid var(--border); padding: 15px 5px; border-radius: 10px; cursor: pointer; text-align: center; transition: 0.2s; }
-        .bloom-card.selected { border: 2px solid var(--accent) !important; background: rgba(124,106,247,0.2) !important; }
-        .btn-gen { background: var(--accent); color: white; border: none; padding: 18px; border-radius: var(--radius); width: 100%; font-weight: 700; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn-gen:active { transform: scale(0.98); }
-        .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(13,13,15,0.98); z-index: 1000; align-items: center; justify-content: center; flex-direction: column; }
-        .loading-overlay.show { display: flex; }
-        .soal-box { background: var(--bg3); padding: 25px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--accent); }
-    </style>
-</head>
-<body>
-
-<div class="loading-overlay" id="loader">
-    <div style="font-family: 'Syne'; font-size: 26px; color: var(--accent); margin-bottom: 10px;">⚡ Meracik Soal HOTS...</div>
-    <div style="color: var(--text2); font-size: 14px;">AI sedang menyusun data JSON...</div>
-</div>
-
-<div class="app-container">
-    <aside class="sidebar">
-        <h1 style="font-family: 'Syne'; font-size: 24px; margin-bottom: 40px;">HOTS <span style="color: var(--accent);">V6</span></h1>
-        <div class="nav-item" onclick="showScreen('generate')">✦ Buat Soal</div>
-        <div id="nav-hasil" class="nav-item" style="display: none; color: var(--accent);" onclick="showScreen('hasil')">📄 Hasil Terakhir</div>
-    </aside>
-
-    <main class="main-content">
-        <div id="screen-generate" class="screen active">
-            <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 30px;">Generator Soal</h2>
-            <div class="card">
-                <label style="font-size: 13px; color: #999; display: block; margin-bottom: 8px;">Mata Pelajaran</label>
-                <input type="text" id="mapel" placeholder="Contoh: Ekonomi">
-                <label style="font-size: 13px; color: #999; display: block; margin-bottom: 8px;">Materi</label>
-                <input type="text" id="materi" placeholder="Contoh: Inflasi & Moneter">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <input type="text" id="kelas" value="11" placeholder="Kelas">
-                    <input type="number" id="numSoal" value="3">
-                </div>
-                <label style="font-size: 13px; color: #999; display: block; margin-bottom: 8px;">Tujuan Pembelajaran</label>
-                <textarea id="tp" rows="3" placeholder="Masukkan TP Kurikulum Merdeka..."></textarea>
-            </div>
-            <div class="card">
-                <div class="bloom-grid">
-                    <div class="bloom-card" id="C1" onclick="pilihLevel('C1')">C1</div>
-                    <div class="bloom-card" id="C2" onclick="pilihLevel('C2')">C2</div>
-                    <div class="bloom-card" id="C3" onclick="pilihLevel('C3')">C3</div>
-                    <div class="bloom-card" id="C4" onclick="pilihLevel('C4')">C4</div>
-                    <div class="bloom-card" id="C5" onclick="pilihLevel('C5')">C5</div>
-                    <div class="bloom-card" id="C6" onclick="pilihLevel('C6')">C6</div>
-                </div>
-            </div>
-            <select id="jenisSoal">
-                <option value="Pilihan Ganda">Pilihan Ganda</option>
-                <option value="PG Kompleks">PG Kompleks</option>
-                <option value="Uraian">Uraian</option>
-            </select>
-            <button class="btn-gen" onclick="gasKeServer()">GENERATE SEKARANG</button>
-        </div>
-
-        <div id="screen-hasil" class="screen">
-            <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 25px;">Hasil Soal</h2>
-            <div id="hasil-box"></div>
-            <button class="btn-gen" style="background:var(--bg3); margin-top: 20px;" onclick="showScreen('generate')">KEMBALI KE FORM</button>
-        </div>
-    </main>
-</div>
-
 <script>
 let levelAktif = "C4";
 
@@ -103,55 +17,106 @@ async function gasKeServer() {
     const mapel = document.getElementById('mapel').value;
     const materi = document.getElementById('materi').value;
     const tp = document.getElementById('tp').value;
-    
+    const kelas = document.getElementById('kelas').value;
+    const jumlah = document.getElementById('numSoal').value;
+    const jenis = document.getElementById('jenisSoal').value;
+
     if(!mapel || !tp) return alert("Wajib isi Mapel & TP!");
 
     document.getElementById('loader').classList.add('show');
     const containerHasil = document.getElementById('hasil-box');
     containerHasil.innerHTML = "";
 
-    const fullPrompt = `Buatkan ${document.getElementById('numSoal').value} soal HOTS ${mapel} materi ${materi} kelas ${document.getElementById('kelas').value} level Bloom ${levelAktif}. Jenis soal: ${document.getElementById('jenisSoal').value}. Berdasarkan TP: ${tp}. Wajib format JSON: {"soal":[{"no":1,"pertanyaan":"...","opsi":["A","B","C","D"],"kunci":"..."}]}`;
+    const fullPrompt = `
+Kamu adalah AI pembuat soal HOTS.
+
+WAJIB:
+- Output HARUS JSON VALID
+- TANPA PENJELASAN
+- TANPA BACKTICK
+- HANYA JSON
+
+FORMAT:
+{
+  "soal":[
+    {
+      "no":1,
+      "stimulus":"...",
+      "pertanyaan":"...",
+      "opsi":["A. ...","B. ...","C. ...","D. ...","E. ..."],
+      "kunci":"A"
+    }
+  ]
+}
+
+Buat ${jumlah} soal HOTS
+Mapel: ${mapel}
+Kelas: ${kelas}
+Materi: ${materi}
+Level: ${levelAktif}
+Jenis: ${jenis}
+TP: ${tp}
+`;
 
     try {
-        const res = await fetch('/api/generate', {
+        const res = await fetch('http://localhost:3000/api/generate', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ prompt: fullPrompt })
         });
 
         const data = await res.json();
-        
-        // PENGAMAN: Cek apakah data.soal itu ada dan berbentuk array
-        const listSoal = data.soal || data.questions || [];
+        console.log("DATA:", data);
 
-        if(listSoal && Array.isArray(listSoal) && listSoal.length > 0) {
+        let listSoal = [];
+
+        if (Array.isArray(data)) {
+            listSoal = data;
+        } else if (Array.isArray(data.soal)) {
+            listSoal = data.soal;
+        }
+
+        if (listSoal.length > 0) {
             let innerContent = "";
+
             listSoal.forEach((s, idx) => {
-                const q = s.pertanyaan || s.question || "Soal gagal dimuat";
-                const k = s.kunci || s.answer || "-";
-                const o = s.opsi || s.options || [];
+                const stim = s.stimulus || "";
+                const q = s.pertanyaan || "Soal tidak tersedia";
+                const k = s.kunci || "-";
+                let o = s.opsi || [];
+
+                if (!Array.isArray(o)) {
+                    o = Object.entries(o).map(([key, val]) => `${key}. ${val}`);
+                }
 
                 innerContent += `
                 <div class="soal-box">
                     <div style="color:var(--accent); font-weight:bold; margin-bottom:10px;">NO ${idx+1}</div>
+
+                    ${stim ? `<div style="font-size:13px; opacity:0.7; margin-bottom:10px;">${stim}</div>` : ""}
+
                     <div style="line-height:1.7; margin-bottom:15px;">${q}</div>
+
                     <div style="display:grid; gap:8px;">
-                        ${o.map(opt => `<div style="padding:10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px; font-size:14px;">${opt}</div>`).join('')}
+                        ${o.map(opt => `<div style="padding:10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px;">${opt}</div>`).join('')}
                     </div>
-                    <div style="margin-top:20px; color:#3ecf8e; font-weight:bold; border-top:1px dashed var(--border); padding-top:10px;">Kunci: ${k}</div>
+
+                    <div style="margin-top:20px; color:#3ecf8e; font-weight:bold; border-top:1px dashed var(--border); padding-top:10px;">
+                        Kunci: ${k}
+                    </div>
                 </div>`;
             });
+
             containerHasil.innerHTML = innerContent;
             document.getElementById('nav-hasil').style.display = 'block';
-            
-            // JEDA SEDIKIT AGAR SMOOTH
             setTimeout(() => showScreen('hasil'), 200);
 
         } else {
-            alert("Format AI sedang tidak stabil (Gambar 4). Silakan klik Generate lagi Bos!");
+            alert("AI tidak mengembalikan data soal. Coba generate ulang.");
         }
+
     } catch(err) {
-        alert("Gagal: " + err.message);
+        alert("Error: " + err.message);
     } finally {
         document.getElementById('loader').classList.remove('show');
     }
@@ -159,5 +124,3 @@ async function gasKeServer() {
 
 document.addEventListener('DOMContentLoaded', () => pilihLevel('C4'));
 </script>
-</body>
-</html>
