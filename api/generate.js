@@ -1,40 +1,126 @@
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-  const { prompt } = req.body;
-  const API_KEY = process.env.GEMINI_API_KEY;
+<script>
+let levelAktif = "C4";
 
-  try {
-    // Menggunakan v1beta dengan endpoint yang benar-benar stabil
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt + ". Balas hanya dengan JSON murni tanpa kata-kata lain." }] }],
-        generationConfig: { temperature: 1.0 } // Dinaikkan sedikit agar lebih kreatif tapi tetap dalam format
-      })
-    });
-
-    const data = await response.json();
-    if (!response.ok) return res.status(response.status).json({ error: data.error?.message });
-
-    let rawText = data.candidates[0].content.parts[0].text;
-    
-    // REGEX RADAR: Menangkap apa pun di dalam kurung kurawal { ... }
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        res.status(200).json(parsed);
-      } catch (e) {
-        res.status(500).json({ error: "JSON Corrupted", raw: rawText });
-      }
-    } else {
-      res.status(500).json({ error: "No JSON found", raw: rawText });
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+function pilihLevel(v) {
+    levelAktif = v;
+    document.querySelectorAll('.bloom-card').forEach(el => el.classList.remove('selected'));
+    document.getElementById(v).classList.add('selected');
 }
+
+function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    window.scrollTo(0,0);
+}
+
+async function gasKeServer() {
+    const mapel = document.getElementById('mapel').value;
+    const materi = document.getElementById('materi').value;
+    const tp = document.getElementById('tp').value;
+    const kelas = document.getElementById('kelas').value;
+    const jumlah = document.getElementById('numSoal').value;
+    const jenis = document.getElementById('jenisSoal').value;
+
+    if(!mapel || !tp) return alert("Wajib isi Mapel & TP!");
+
+    document.getElementById('loader').classList.add('show');
+    const containerHasil = document.getElementById('hasil-box');
+    containerHasil.innerHTML = "";
+
+    const fullPrompt = `
+Kamu adalah AI pembuat soal HOTS.
+
+WAJIB:
+- Output HARUS JSON VALID
+- TANPA PENJELASAN
+- TANPA BACKTICK
+- HANYA JSON
+
+FORMAT:
+{
+  "soal":[
+    {
+      "no":1,
+      "stimulus":"...",
+      "pertanyaan":"...",
+      "opsi":["A. ...","B. ...","C. ...","D. ...","E. ..."],
+      "kunci":"A"
+    }
+  ]
+}
+
+Buat ${jumlah} soal HOTS
+Mapel: ${mapel}
+Kelas: ${kelas}
+Materi: ${materi}
+Level: ${levelAktif}
+Jenis: ${jenis}
+TP: ${tp}
+`;
+
+    try {
+        const res = await fetch('http://localhost:3000/api/generate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ prompt: fullPrompt })
+        });
+
+        const data = await res.json();
+        console.log("DATA:", data);
+
+        let listSoal = [];
+
+        if (Array.isArray(data)) {
+            listSoal = data;
+        } else if (Array.isArray(data.soal)) {
+            listSoal = data.soal;
+        }
+
+        if (listSoal.length > 0) {
+            let innerContent = "";
+
+            listSoal.forEach((s, idx) => {
+                const stim = s.stimulus || "";
+                const q = s.pertanyaan || "Soal tidak tersedia";
+                const k = s.kunci || "-";
+                let o = s.opsi || [];
+
+                if (!Array.isArray(o)) {
+                    o = Object.entries(o).map(([key, val]) => `${key}. ${val}`);
+                }
+
+                innerContent += `
+                <div class="soal-box">
+                    <div style="color:var(--accent); font-weight:bold; margin-bottom:10px;">NO ${idx+1}</div>
+
+                    ${stim ? `<div style="font-size:13px; opacity:0.7; margin-bottom:10px;">${stim}</div>` : ""}
+
+                    <div style="line-height:1.7; margin-bottom:15px;">${q}</div>
+
+                    <div style="display:grid; gap:8px;">
+                        ${o.map(opt => `<div style="padding:10px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px;">${opt}</div>`).join('')}
+                    </div>
+
+                    <div style="margin-top:20px; color:#3ecf8e; font-weight:bold; border-top:1px dashed var(--border); padding-top:10px;">
+                        Kunci: ${k}
+                    </div>
+                </div>`;
+            });
+
+            containerHasil.innerHTML = innerContent;
+            document.getElementById('nav-hasil').style.display = 'block';
+            setTimeout(() => showScreen('hasil'), 200);
+
+        } else {
+            alert("AI tidak mengembalikan data soal. Coba generate ulang.");
+        }
+
+    } catch(err) {
+        alert("Error: " + err.message);
+    } finally {
+        document.getElementById('loader').classList.remove('show');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => pilihLevel('C4'));
+</script>
