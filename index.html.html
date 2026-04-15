@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HOTS Generator Pro v3</title>
+<title>HOTS Generator Pro v3 — Stable Build</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
-/* --- CSS MASTER --- */
+/* --- CSS MASTER LUXURY --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg: #0d0d0f; --bg2: #141418; --bg3: #1c1c22; --border: rgba(255,255,255,0.08);
@@ -18,40 +18,42 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 .main-content { margin-left: 280px; flex: 1; padding: 40px 60px; max-width: 1200px; }
 
 /* Navigation */
-.nav-item { cursor: pointer; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; transition: 0.2s; }
+.nav-item { cursor: pointer; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; transition: 0.2s; font-weight: 500; }
 .nav-item:hover { background: var(--bg3); color: var(--accent); }
 
 /* Screens */
 .screen { display: none; }
 .screen.active { display: block; animation: fadeIn 0.3s ease; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Cards & Inputs */
 .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
-label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 8px; }
+label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 8px; font-weight: 500; }
 input, textarea, select { 
     width: 100%; background: var(--bg3); border: 1px solid var(--border); 
-    border-radius: 8px; padding: 12px; color: white; outline: none; margin-bottom: 15px;
+    border-radius: 8px; padding: 12px; color: white; outline: none; margin-bottom: 15px; font-size: 14px;
 }
+input:focus, textarea:focus { border-color: var(--accent); }
 
-/* Bloom Grid C1-C6 (Pasti Bisa Diklik) */
-.bloom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+/* Bloom Grid */
+.bloom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
 .bloom-card { 
     background: var(--bg3); border: 1px solid var(--border); padding: 15px 5px; 
     border-radius: 10px; cursor: pointer; text-align: center; transition: 0.2s;
 }
 .bloom-card.selected { 
     border-color: var(--accent) !important; 
-    background: rgba(124,106,247,0.2) !important;
-    box-shadow: 0 0 15px rgba(124,106,247,0.2);
+    background: rgba(124,106,247,0.15) !important;
+    box-shadow: 0 0 15px rgba(124,106,247,0.1);
 }
 
 .btn-gen { 
     background: var(--accent); color: white; border: none; padding: 18px; 
     border-radius: var(--radius); width: 100%; font-weight: 600; cursor: pointer;
-    font-family: 'Syne', sans-serif; font-size: 16px;
+    font-family: 'Syne', sans-serif; font-size: 16px; transition: 0.3s;
 }
-.btn-gen:disabled { opacity: 0.5; }
+.btn-gen:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.btn-gen:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Loader */
 .loading-overlay { 
@@ -59,37 +61,43 @@ input, textarea, select {
     z-index: 1000; align-items: center; justify-content: center; flex-direction: column;
 }
 .loading-overlay.show { display: flex; }
-.soal-box { background: var(--bg3); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--accent); }
+
+/* Result Box */
+.soal-box { background: var(--bg3); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid var(--accent); }
 </style>
 </head>
 <body>
 
 <div class="loading-overlay" id="loader">
-    <div style="font-family: 'Syne'; font-size: 24px; color: var(--accent);">⚡ Memproses Soal...</div>
+    <div style="font-family: 'Syne'; font-size: 26px; color: var(--accent);">⚡ Meracik Soal AI...</div>
+    <p style="color: var(--text2); margin-top: 10px;">Mohon tunggu, AI sedang menyusun data JSON.</p>
 </div>
 
 <div class="app-container">
     <aside class="sidebar">
-        <h1 style="font-family: 'Syne'; font-size: 24px; margin-bottom: 30px;">HOTS <span style="color: var(--accent);">V3</span></h1>
+        <h1 style="font-family: 'Syne'; font-size: 24px; margin-bottom: 40px;">HOTS <span style="color: var(--accent);">V3</span></h1>
         <div class="nav-item" onclick="showScreen('generate')">✦ Buat Soal</div>
         <div id="nav-hasil" class="nav-item" style="display: none; color: var(--accent);" onclick="showScreen('hasil')">📄 Hasil Terakhir</div>
     </aside>
 
     <main class="main-content">
         <div id="screen-generate" class="screen active">
-            <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 25px;">Generator Soal</h2>
+            <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 30px;">Generator Soal</h2>
             
             <div class="card">
                 <label>Mata Pelajaran</label>
-                <input type="text" id="mapel" placeholder="Contoh: Geografi">
+                <input type="text" id="mapel" placeholder="Contoh: Biologi">
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div><label>Kelas</label><input type="text" id="kelas" value="10"></div>
                     <div><label>Jumlah Soal</label><input type="number" id="numSoal" value="3"></div>
                 </div>
 
+                <label>Materi</label>
+                <input type="text" id="materi" placeholder="Contoh: Ekosistem">
+
                 <label>Tujuan Pembelajaran (TP)</label>
-                <textarea id="tp" rows="3" placeholder="Contoh: Menganalisis sebaran flora fauna"></textarea>
+                <textarea id="tp" rows="3" placeholder="Contoh: Menganalisis interaksi antar komponen ekosistem"></textarea>
             </div>
 
             <div class="card">
@@ -117,11 +125,11 @@ input, textarea, select {
                 </select>
             </div>
 
-            <button class="btn-gen" id="gen-btn" onclick="gasKeServer()">GENERATE SOAL</button>
+            <button class="btn-gen" id="gen-btn" onclick="gasKeServer()">GENERATE SOAL SEKARANG</button>
         </div>
 
         <div id="screen-hasil" class="screen">
-            <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 20px;">Hasil Soal</h2>
+            <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 25px;">Hasil Soal</h2>
             <div id="hasil-box"></div>
             <button class="btn-gen" style="background:var(--bg3); margin-top: 20px;" onclick="showScreen('generate')">BUAT LAGI</button>
         </div>
@@ -129,14 +137,11 @@ input, textarea, select {
 </div>
 
 <script>
-let bloomVal = "C4"; // Default
+let bloomVal = "C4";
 
-// FUNGSI KLIK BLOOM (Pasti Jalan)
 function pilihLevel(id) {
     bloomVal = id;
-    // Hapus class selected dari semua
     document.querySelectorAll('.bloom-card').forEach(c => c.classList.remove('selected'));
-    // Tambah ke yang dipilih
     document.getElementById(id).classList.add('selected');
 }
 
@@ -146,55 +151,62 @@ function showScreen(name) {
 }
 
 async function gasKeServer() {
-    const mapel = document.getElementById('mapel').value;
-    const tp = document.getElementById('tp').value;
+    const mapel = document.getElementById('mapel').value.trim();
+    const tp = document.getElementById('tp').value.trim();
+    const materi = document.getElementById('materi').value.trim();
     const num = document.getElementById('numSoal').value;
     const jenis = document.getElementById('jenisSoal').value;
+    const kelas = document.getElementById('kelas').value;
 
-    if(!mapel || !tp) return alert("Isi Mapel & TP dulu Bos!");
+    if(!mapel || !tp) return alert("Lengkapi Mapel dan TP dulu Bos!");
 
-    document.getElementById('loader').classList.add('show');
-    
-    const prompt = `Buatkan ${num} soal ${mapel}. Jenis: ${jenis}. Level: ${bloomVal}. TP: ${tp}. Wajib JSON: {"soal": [{"no": 1, "pertanyaan": "...", "opsi": ["A. ...", "B. ..."], "kunci": "..."}]}`;
+    const loader = document.getElementById('loader');
+    loader.classList.add('show');
+
+    // Prompt diperketat agar AI tidak kirim teks sampah
+    const promptText = `HANYA balas dalam format JSON murni. Buatkan ${num} soal ${mapel} materi ${materi} kelas ${kelas}. Jenis: ${jenis}. Level Bloom: ${bloomVal}. TP: ${tp}. 
+    Struktur JSON: {"soal": [{"no": 1, "pertanyaan": "...", "opsi": ["A. ...", "B. ...", "C. ...", "D. ...", "E. ..."], "kunci": "..."}]}`;
 
     try {
         const res = await fetch('/api/generate', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ prompt })
+            body: JSON.stringify({ prompt: promptText })
         });
+
         const data = await res.json();
-        
-        let html = "";
-        // Ganti bagian render di dalam fungsi gasKeServer Bos dengan ini:
-if (data && data.soal && Array.isArray(data.soal)) {
-    let html = "";
-    data.soal.forEach(s => {
-        html += `<div class="soal-box">
-            <b>No ${s.no || '-'}</b> [${jenis}]<br><br>
-            ${s.pertanyaan || s.stem || 'Soal tidak terbaca'}<br><br>
-            ${s.opsi ? (Array.isArray(s.opsi) ? s.opsi.map(o => `<div>${o}</div>`).join('') : Object.values(s.opsi).map(v => `<div>${v}</div>`).join('')) : ''}
-            <div style="color:#3ecf8e; margin-top:10px; font-weight:bold;">Kunci: ${s.kunci || '-'}</div>
-        </div>`;
-    });
-    document.getElementById('hasil-box').innerHTML = html;
-    showScreen('hasil');
-    document.getElementById('nav-hasil').style.display = 'block';
-} else {
-    throw new Error("Format data soal tidak dikenali AI");
-}
-        });
-        document.getElementById('hasil-box').innerHTML = html;
-        showScreen('hasil');
-        document.getElementById('nav-hasil').style.display = 'block';
+        if (!res.ok) throw new Error(data.error || "Gagal mengambil data");
+
+        // PENGAMAN: Cek apakah data.soal ada dan berbentuk Array
+        if (data && data.soal && Array.isArray(data.soal)) {
+            let html = "";
+            data.soal.forEach(s => {
+                html += `<div class="soal-box">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <b style="color:var(--accent)">NO ${s.no || '?'}</b>
+                        <small style="opacity:0.5">${jenis} | ${bloomVal}</small>
+                    </div>
+                    <div style="line-height:1.6; margin-bottom:15px;">${s.pertanyaan || 'Gagal memuat pertanyaan'}</div>
+                    <div style="display: grid; gap: 8px;">
+                        ${s.opsi ? (Array.isArray(s.opsi) ? s.opsi.map(o => `<div style="padding:10px; background:var(--bg2); border:1px solid var(--border); border-radius:6px; font-size:14px;">${o}</div>`).join('') : '') : ''}
+                    </div>
+                    <div style="margin-top:20px; color:#3ecf8e; font-weight:bold; border-top: 1px dashed var(--border); padding-top:10px;">Kunci: ${s.kunci || '-'}</div>
+                </div>`;
+            });
+            document.getElementById('hasil-box').innerHTML = html;
+            showScreen('hasil');
+            document.getElementById('nav-hasil').style.display = 'block';
+        } else {
+            throw new Error("Format JSON dari AI tidak valid");
+        }
     } catch(e) {
-        alert("Gagal: " + e.message);
+        alert("Terjadi Kendala: " + e.message);
+        console.error(e);
     } finally {
-        document.getElementById('loader').classList.remove('show');
+        loader.classList.remove('show');
     }
 }
 
-// Set default C4 saat start
 window.onload = () => pilihLevel('C4');
 </script>
 </body>
