@@ -1,41 +1,23 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>HOTS Generator</title>
-<style>
-body { font-family: Arial; background:#111; color:#fff; padding:20px; }
-input, textarea { width:100%; padding:10px; margin:5px 0; }
-button { padding:10px; background:#7c6af7; color:#fff; border:none; cursor:pointer; }
-.soal { background:#222; padding:15px; margin-top:15px; }
-</style>
-</head>
-<body>
-
-<h2>🔥 HOTS Generator</h2>
-
-<input id="mapel" placeholder="Mapel">
-<input id="kelas" placeholder="Kelas" value="11">
-<input id="materi" placeholder="Materi">
-<textarea id="tp" placeholder="Tujuan Pembelajaran"></textarea>
-
-<button onclick="generate()">GENERATE</button>
-
-<div id="hasil"></div>
-
 <script>
-async function generate() {
-    const mapel = document.getElementById("mapel").value;
-    const kelas = document.getElementById("kelas").value;
-    const materi = document.getElementById("materi").value;
-    const tp = document.getElementById("tp").value;
+async function gasKeServer() {
+    const hasilBox = document.getElementById("hasil-box");
 
-    if(!mapel || !tp) return alert("Isi dulu!");
+    try {
+        hasilBox.innerHTML = "⏳ Generating...";
 
-    document.getElementById("hasil").innerHTML = "Loading...";
+        const mapel = document.getElementById("mapel").value;
+        const materi = document.getElementById("materi").value;
+        const tp = document.getElementById("tp").value;
+        const kelas = document.getElementById("kelas").value;
+        const jumlah = document.getElementById("numSoal").value;
 
-    const prompt = `
-WAJIB JSON VALID:
+        if (!mapel || !tp) {
+            alert("Isi Mapel & TP dulu!");
+            return;
+        }
+
+        const prompt = `
+WAJIB JSON VALID TANPA PENJELASAN
 
 {
  "soal":[
@@ -49,30 +31,48 @@ WAJIB JSON VALID:
  ]
 }
 
-Buat 3 soal HOTS
+Buat ${jumlah} soal HOTS
 Mapel: ${mapel}
 Kelas: ${kelas}
 Materi: ${materi}
 TP: ${tp}
 `;
 
-    try {
         const res = await fetch("/api/generate", {
-            method:"POST",
-            headers:{ "Content-Type":"application/json" },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ prompt })
         });
 
+        // 🔥 HANDLE ERROR API
+        if (!res.ok) {
+            const txt = await res.text();
+            throw new Error("API ERROR: " + txt);
+        }
+
         const data = await res.json();
-        console.log(data);
+        console.log("DATA:", data);
 
-        let soal = data.soal || [];
+        let listSoal = [];
 
-        if (!Array.isArray(soal)) soal = [soal];
+        // 🔥 NORMALISASI SUPER AMAN
+        if (Array.isArray(data)) {
+            listSoal = data;
+        } else if (Array.isArray(data.soal)) {
+            listSoal = data.soal;
+        } else if (data.soal) {
+            listSoal = [data.soal];
+        }
 
+        // 🔥 FALLBACK JIKA KOSONG
+        if (!listSoal.length) {
+            throw new Error("AI tidak mengembalikan soal");
+        }
+
+        // 🔥 RENDER
         let html = "";
 
-        soal.forEach((s,i)=>{
+        listSoal.forEach((s, i) => {
             let opsi = s.opsi || [];
 
             if (!Array.isArray(opsi)) {
@@ -80,23 +80,40 @@ TP: ${tp}
             }
 
             html += `
-            <div class="soal">
-                <b>No ${i+1}</b><br><br>
-                ${s.stimulus || ""}<br><br>
-                ${s.pertanyaan}<br><br>
-                ${opsi.map(o=>o+"<br>").join("")}
-                <br><b>Jawaban: ${s.kunci}</b>
+            <div class="soal-box">
+                <div style="color:#7c6af7;font-weight:bold;">NO ${i+1}</div>
+
+                ${s.stimulus ? `<div style="opacity:0.7;font-size:13px;margin:10px 0;">${s.stimulus}</div>` : ""}
+
+                <div style="margin-bottom:10px;">${s.pertanyaan || "-"}</div>
+
+                ${opsi.map(o => `<div style="padding:6px;border:1px solid #333;margin:4px 0;">${o}</div>`).join("")}
+
+                <div style="margin-top:10px;color:#3ecf8e;">
+                    Kunci: ${s.kunci || "-"}
+                </div>
             </div>
             `;
         });
 
-        document.getElementById("hasil").innerHTML = html;
+        hasilBox.innerHTML = html;
 
-    } catch(e) {
-        document.getElementById("hasil").innerHTML = "ERROR: " + e.message;
+        document.getElementById('nav-hasil').style.display = 'block';
+        showScreen('hasil');
+
+    } catch (err) {
+        console.error(err);
+
+        hasilBox.innerHTML = `
+        <div class="soal-box">
+            <div style="color:red;font-weight:bold;">❌ ERROR</div>
+            <div style="margin-top:10px;">${err.message}</div>
+            <div style="margin-top:10px;font-size:12px;">
+                Cek console (F12)
+            </div>
+        </div>
+        `;
+        showScreen('hasil');
     }
 }
 </script>
-
-</body>
-</html>
