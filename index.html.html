@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HOTS Generator Pro v3 — Fixed & Stable</title>
+<title>HOTS Generator Pro v3 — Ultimate Stable</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
 /* --- CSS MASTER --- */
@@ -17,63 +17,59 @@ body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-s
 .sidebar { width: 280px; background: var(--bg2); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; z-index: 100; }
 .main-content { margin-left: 280px; flex: 1; padding: 40px 60px; max-width: 1200px; }
 
-/* Navigation */
+/* Navigation & Screens */
 .nav-item { cursor: pointer; padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; transition: 0.2s; font-weight: 500; }
 .nav-item:hover { background: var(--bg3); color: var(--accent); }
-
-/* Screens */
-.screen { display: none; }
-.screen.active { display: block; animation: fadeIn 0.3s ease; }
+.screen { display: none; animation: fadeIn 0.4s ease; }
+.screen.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Cards & Inputs */
+/* Form Components */
 .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
-label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 8px; font-weight: 500; }
+label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 8px; }
 input, textarea, select { 
     width: 100%; background: var(--bg3); border: 1px solid var(--border); 
-    border-radius: 8px; padding: 12px; color: white; outline: none; margin-bottom: 15px; font-size: 14px;
+    border-radius: 8px; padding: 12px; color: white; outline: none; margin-bottom: 15px;
 }
 
 /* Bloom Grid */
-.bloom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+.bloom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .bloom-card { 
     background: var(--bg3); border: 1px solid var(--border); padding: 15px 5px; 
-    border-radius: 10px; cursor: pointer; text-align: center; transition: 0.2s;
+    border-radius: 10px; cursor: pointer; text-align: center; transition: 0.2s; font-weight: bold;
 }
-/* Paksa warna saat terpilih */
 .bloom-card.selected { 
     border: 2px solid var(--accent) !important; 
     background: rgba(124,106,247,0.2) !important;
+    color: white;
 }
 
 .btn-gen { 
     background: var(--accent); color: white; border: none; padding: 18px; 
-    border-radius: var(--radius); width: 100%; font-weight: 600; cursor: pointer;
+    border-radius: var(--radius); width: 100%; font-weight: 700; cursor: pointer;
     font-family: 'Syne', sans-serif; font-size: 16px;
 }
-.btn-gen:disabled { opacity: 0.5; }
 
-/* Loader */
+/* Result Style */
+.soal-box { background: var(--bg3); padding: 25px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--accent); }
 .loading-overlay { 
     display: none; position: fixed; inset: 0; background: rgba(13,13,15,0.95); 
     z-index: 1000; align-items: center; justify-content: center; flex-direction: column;
 }
 .loading-overlay.show { display: flex; }
-
-.soal-box { background: var(--bg3); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid var(--accent); }
 </style>
 </head>
 <body>
 
 <div class="loading-overlay" id="loader">
-    <div style="font-family: 'Syne'; font-size: 26px; color: var(--accent);">⚡ Meracik Soal...</div>
+    <div style="font-family: 'Syne'; font-size: 26px; color: var(--accent);">⚡ Meracik Soal AI...</div>
 </div>
 
 <div class="app-container">
     <aside class="sidebar">
         <h1 style="font-family: 'Syne'; font-size: 24px; margin-bottom: 40px;">HOTS <span style="color: var(--accent);">V3</span></h1>
         <div class="nav-item" onclick="showScreen('generate')">✦ Buat Soal</div>
-        <div id="nav-hasil" class="nav-item" style="display: none; color: var(--accent);" onclick="showScreen('hasil')">📄 Lihat Hasil</div>
+        <div id="nav-hasil" class="nav-item" style="display: none; color: var(--accent);" onclick="showScreen('hasil')">📄 Hasil Terakhir</div>
     </aside>
 
     <main class="main-content">
@@ -82,13 +78,13 @@ input, textarea, select {
             
             <div class="card">
                 <label>Mata Pelajaran</label>
-                <input type="text" id="mapel" placeholder="Contoh: Fisika">
+                <input type="text" id="mapel" placeholder="Contoh: IPA Terpadu">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div><label>Kelas</label><input type="text" id="kelas" value="10"></div>
-                    <div><label>Jumlah</label><input type="number" id="numSoal" value="3"></div>
+                    <div><label>Jumlah Soal</label><input type="number" id="numSoal" value="3"></div>
                 </div>
                 <label>Tujuan Pembelajaran (TP)</label>
-                <textarea id="tp" rows="3" placeholder="Masukkan TP di sini..."></textarea>
+                <textarea id="tp" rows="3" placeholder="Paste TP di sini..."></textarea>
             </div>
 
             <div class="card">
@@ -106,59 +102,55 @@ input, textarea, select {
             <div class="card">
                 <label>Jenis Soal</label>
                 <select id="jenisSoal">
-                    <option value="Pilihan Ganda">Pilihan Ganda</option>
-                    <option value="PG Kompleks">PG Kompleks</option>
+                    <option value="Pilihan Ganda">Pilihan Ganda (PG)</option>
+                    <option value="PG Kompleks (3 Benar)">PG Kompleks (3 Benar)</option>
                     <option value="Uraian">Uraian</option>
                     <option value="Menjodohkan">Menjodohkan</option>
+                    <option value="Benar Salah">Benar Salah</option>
                 </select>
             </div>
 
-            <button class="btn-gen" id="gen-btn" onclick="gasKeServer()">GENERATE SEKARANG</button>
+            <button class="btn-gen" onclick="gasKeServer()">GENERATE SEKARANG</button>
         </div>
 
         <div id="screen-hasil" class="screen">
             <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 25px;">Hasil Soal</h2>
             <div id="hasil-box"></div>
-            <button class="btn-gen" style="background:var(--bg3);" onclick="showScreen('generate')">KEMBALI</button>
+            <button class="btn-gen" style="background:var(--bg3); margin-top: 20px;" onclick="showScreen('generate')">BUAT LAGI</button>
         </div>
     </main>
 </div>
 
 <script>
-// 1. Variabel Global
-let bloomTerpilih = "C4";
+let levelKognitif = "C4";
 
-// 2. Fungsi Klik Level (Ditaruh di paling atas)
 function pilihLevel(val) {
-    bloomTerpilih = val;
-    // Bersihkan semua
-    document.querySelectorAll('.bloom-card').forEach(el => {
-        el.classList.remove('selected');
-    });
-    // Tandai yang dipilih
+    levelKognitif = val;
+    document.querySelectorAll('.bloom-card').forEach(el => el.classList.remove('selected'));
     const target = document.getElementById(val);
     if(target) target.classList.add('selected');
-    console.log("Level dipilih:", bloomTerpilih); // Untuk debug di console
 }
 
-// 3. Fungsi Navigasi
 function showScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-' + name).classList.add('active');
+    window.scrollTo(0,0);
 }
 
-// 4. Fungsi Generate
 async function gasKeServer() {
     const mapel = document.getElementById('mapel').value;
     const tp = document.getElementById('tp').value;
     const num = document.getElementById('numSoal').value;
     const jenis = document.getElementById('jenisSoal').value;
 
-    if(!mapel || !tp) return alert("Isi data dulu!");
+    if(!mapel || !tp) return alert("Isi Mapel & TP dulu Bos!");
 
     document.getElementById('loader').classList.add('show');
+    const box = document.getElementById('hasil-box');
+    box.innerHTML = ""; 
 
-    const promptText = `Buatkan ${num} soal ${mapel} level ${bloomTerpilih} jenis ${jenis} untuk TP: ${tp}. Wajib JSON: {"soal": [{"no": 1, "pertanyaan": "...", "opsi": ["A", "B", "C"], "kunci": "..."}]}`;
+    const promptText = `Hasilkan ${num} soal ${mapel} level ${levelKognitif} jenis ${jenis}. TP: ${tp}. 
+    WAJIB FORMAT JSON: {"soal": [{"no": 1, "pertanyaan": "...", "opsi": ["A", "B", "C", "D"], "kunci": "..."}]}`;
 
     try {
         const res = await fetch('/api/generate', {
@@ -168,28 +160,42 @@ async function gasKeServer() {
         });
         
         const data = await res.json();
+
+        // LOGIKA PENDETEKSI DATA (Agar hasil pasti keluar)
+        const itemSoal = data.soal || data.questions || [];
         
-        if(data && data.soal) {
+        if(itemSoal.length > 0) {
             let html = "";
-            data.soal.forEach(s => {
-                html += `<div class="soal-box">
-                    <b>NO ${s.no}</b><br>${s.pertanyaan}<br><br>
-                    ${s.opsi ? s.opsi.map(o => `<div>${o}</div>`).join('') : ''}
-                    <div style="color:cyan; margin-top:10px;">Kunci: ${s.kunci}</div>
+            itemSoal.forEach((s, idx) => {
+                const q = s.pertanyaan || s.soal || s.question || "Teks soal tidak ditemukan";
+                const k = s.kunci || s.jawaban || "-";
+                const o = s.opsi || s.options || [];
+
+                html += `
+                <div class="soal-box">
+                    <b style="color:var(--accent)">NO ${s.no || (idx+1)}</b><br><br>
+                    <div style="line-height:1.6">${q}</div><br>
+                    <div style="display:grid; gap:8px;">
+                        ${Array.isArray(o) ? o.map(opt => `<div style="padding:10px; background:var(--bg2); border-radius:6px; border:1px solid var(--border); font-size:14px;">${opt}</div>`).join('') : ''}
+                    </div>
+                    <div style="margin-top:15px; color:#3ecf8e; font-weight:bold;">Kunci: ${k}</div>
                 </div>`;
             });
-            document.getElementById('hasil-box').innerHTML = html;
+            box.innerHTML = html;
             showScreen('hasil');
             document.getElementById('nav-hasil').style.display = 'block';
+        } else {
+            box.innerHTML = `<div class="card">AI kirim data kosong atau format salah. Silakan coba lagi Bos.</div>`;
+            showScreen('hasil');
         }
     } catch(e) {
-        alert("Error server: " + e.message);
+        alert("Gagal koneksi: " + e.message);
     } finally {
         document.getElementById('loader').classList.remove('show');
     }
 }
 
-// 5. Inisialisasi saat pertama kali buka
+// Jalankan saat startup
 document.addEventListener('DOMContentLoaded', () => {
     pilihLevel('C4');
 });
