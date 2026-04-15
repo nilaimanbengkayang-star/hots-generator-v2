@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HOTS Generator Pro v3 — Stable Build</title>
+<title>HOTS Generator Pro v3 — Fixed & Stable</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
-/* --- CSS MASTER LUXURY --- */
+/* --- CSS MASTER --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg: #0d0d0f; --bg2: #141418; --bg3: #1c1c22; --border: rgba(255,255,255,0.08);
   --text: #f0eff4; --text2: #9998a8; --accent: #7c6af7; --radius: 12px;
 }
-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
 .app-container { display: flex; min-height: 100vh; }
 .sidebar { width: 280px; background: var(--bg2); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; z-index: 100; }
 .main-content { margin-left: 280px; flex: 1; padding: 40px 60px; max-width: 1200px; }
@@ -33,7 +33,6 @@ input, textarea, select {
     width: 100%; background: var(--bg3); border: 1px solid var(--border); 
     border-radius: 8px; padding: 12px; color: white; outline: none; margin-bottom: 15px; font-size: 14px;
 }
-input:focus, textarea:focus { border-color: var(--accent); }
 
 /* Bloom Grid */
 .bloom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
@@ -41,19 +40,18 @@ input:focus, textarea:focus { border-color: var(--accent); }
     background: var(--bg3); border: 1px solid var(--border); padding: 15px 5px; 
     border-radius: 10px; cursor: pointer; text-align: center; transition: 0.2s;
 }
+/* Paksa warna saat terpilih */
 .bloom-card.selected { 
-    border-color: var(--accent) !important; 
-    background: rgba(124,106,247,0.15) !important;
-    box-shadow: 0 0 15px rgba(124,106,247,0.1);
+    border: 2px solid var(--accent) !important; 
+    background: rgba(124,106,247,0.2) !important;
 }
 
 .btn-gen { 
     background: var(--accent); color: white; border: none; padding: 18px; 
     border-radius: var(--radius); width: 100%; font-weight: 600; cursor: pointer;
-    font-family: 'Syne', sans-serif; font-size: 16px; transition: 0.3s;
+    font-family: 'Syne', sans-serif; font-size: 16px;
 }
-.btn-gen:hover { transform: translateY(-2px); filter: brightness(1.1); }
-.btn-gen:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-gen:disabled { opacity: 0.5; }
 
 /* Loader */
 .loading-overlay { 
@@ -62,22 +60,20 @@ input:focus, textarea:focus { border-color: var(--accent); }
 }
 .loading-overlay.show { display: flex; }
 
-/* Result Box */
 .soal-box { background: var(--bg3); padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid var(--accent); }
 </style>
 </head>
 <body>
 
 <div class="loading-overlay" id="loader">
-    <div style="font-family: 'Syne'; font-size: 26px; color: var(--accent);">⚡ Meracik Soal AI...</div>
-    <p style="color: var(--text2); margin-top: 10px;">Mohon tunggu, AI sedang menyusun data JSON.</p>
+    <div style="font-family: 'Syne'; font-size: 26px; color: var(--accent);">⚡ Meracik Soal...</div>
 </div>
 
 <div class="app-container">
     <aside class="sidebar">
         <h1 style="font-family: 'Syne'; font-size: 24px; margin-bottom: 40px;">HOTS <span style="color: var(--accent);">V3</span></h1>
         <div class="nav-item" onclick="showScreen('generate')">✦ Buat Soal</div>
-        <div id="nav-hasil" class="nav-item" style="display: none; color: var(--accent);" onclick="showScreen('hasil')">📄 Hasil Terakhir</div>
+        <div id="nav-hasil" class="nav-item" style="display: none; color: var(--accent);" onclick="showScreen('hasil')">📄 Lihat Hasil</div>
     </aside>
 
     <main class="main-content">
@@ -86,86 +82,83 @@ input:focus, textarea:focus { border-color: var(--accent); }
             
             <div class="card">
                 <label>Mata Pelajaran</label>
-                <input type="text" id="mapel" placeholder="Contoh: Biologi">
-                
+                <input type="text" id="mapel" placeholder="Contoh: Fisika">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div><label>Kelas</label><input type="text" id="kelas" value="10"></div>
-                    <div><label>Jumlah Soal</label><input type="number" id="numSoal" value="3"></div>
+                    <div><label>Jumlah</label><input type="number" id="numSoal" value="3"></div>
                 </div>
-
-                <label>Materi</label>
-                <input type="text" id="materi" placeholder="Contoh: Ekosistem">
-
                 <label>Tujuan Pembelajaran (TP)</label>
-                <textarea id="tp" rows="3" placeholder="Contoh: Menganalisis interaksi antar komponen ekosistem"></textarea>
+                <textarea id="tp" rows="3" placeholder="Masukkan TP di sini..."></textarea>
             </div>
 
             <div class="card">
                 <label>Taksonomi Bloom</label>
                 <div class="bloom-grid">
-                    <div class="bloom-card" id="C1" onclick="pilihLevel('C1')">C1<br><small>Mengingat</small></div>
-                    <div class="bloom-card" id="C2" onclick="pilihLevel('C2')">C2<br><small>Memahami</small></div>
-                    <div class="bloom-card" id="C3" onclick="pilihLevel('C3')">C3<br><small>Menerapkan</small></div>
-                    <div class="bloom-card" id="C4" onclick="pilihLevel('C4')">C4<br><small>Analisis</small></div>
-                    <div class="bloom-card" id="C5" onclick="pilihLevel('C5')">C5<br><small>Evaluasi</small></div>
-                    <div class="bloom-card" id="C6" onclick="pilihLevel('C6')">C6<br><small>Mencipta</small></div>
+                    <div class="bloom-card" id="C1" onclick="pilihLevel('C1')">C1</div>
+                    <div class="bloom-card" id="C2" onclick="pilihLevel('C2')">C2</div>
+                    <div class="bloom-card" id="C3" onclick="pilihLevel('C3')">C3</div>
+                    <div class="bloom-card" id="C4" onclick="pilihLevel('C4')">C4</div>
+                    <div class="bloom-card" id="C5" onclick="pilihLevel('C5')">C5</div>
+                    <div class="bloom-card" id="C6" onclick="pilihLevel('C6')">C6</div>
                 </div>
             </div>
 
             <div class="card">
                 <label>Jenis Soal</label>
                 <select id="jenisSoal">
-                    <option value="Pilihan Ganda">Pilihan Ganda (PG)</option>
-                    <option value="Pilihan Ganda Kompleks (2 Benar)">PG Kompleks (2 Benar)</option>
-                    <option value="Pilihan Ganda Kompleks (3 Benar)">PG Kompleks (3 Benar)</option>
+                    <option value="Pilihan Ganda">Pilihan Ganda</option>
+                    <option value="PG Kompleks">PG Kompleks</option>
                     <option value="Uraian">Uraian</option>
-                    <option value="Mengurutkan">Mengurutkan</option>
                     <option value="Menjodohkan">Menjodohkan</option>
-                    <option value="Benar Salah">Benar Salah</option>
                 </select>
             </div>
 
-            <button class="btn-gen" id="gen-btn" onclick="gasKeServer()">GENERATE SOAL SEKARANG</button>
+            <button class="btn-gen" id="gen-btn" onclick="gasKeServer()">GENERATE SEKARANG</button>
         </div>
 
         <div id="screen-hasil" class="screen">
             <h2 style="font-family: 'Syne'; font-size: 32px; margin-bottom: 25px;">Hasil Soal</h2>
             <div id="hasil-box"></div>
-            <button class="btn-gen" style="background:var(--bg3); margin-top: 20px;" onclick="showScreen('generate')">BUAT LAGI</button>
+            <button class="btn-gen" style="background:var(--bg3);" onclick="showScreen('generate')">KEMBALI</button>
         </div>
     </main>
 </div>
 
 <script>
-let bloomVal = "C4";
+// 1. Variabel Global
+let bloomTerpilih = "C4";
 
-function pilihLevel(id) {
-    bloomVal = id;
-    document.querySelectorAll('.bloom-card').forEach(c => c.classList.remove('selected'));
-    document.getElementById(id).classList.add('selected');
+// 2. Fungsi Klik Level (Ditaruh di paling atas)
+function pilihLevel(val) {
+    bloomTerpilih = val;
+    // Bersihkan semua
+    document.querySelectorAll('.bloom-card').forEach(el => {
+        el.classList.remove('selected');
+    });
+    // Tandai yang dipilih
+    const target = document.getElementById(val);
+    if(target) target.classList.add('selected');
+    console.log("Level dipilih:", bloomTerpilih); // Untuk debug di console
 }
 
+// 3. Fungsi Navigasi
 function showScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-' + name).classList.add('active');
 }
 
+// 4. Fungsi Generate
 async function gasKeServer() {
-    const mapel = document.getElementById('mapel').value.trim();
-    const tp = document.getElementById('tp').value.trim();
-    const materi = document.getElementById('materi').value.trim();
+    const mapel = document.getElementById('mapel').value;
+    const tp = document.getElementById('tp').value;
     const num = document.getElementById('numSoal').value;
     const jenis = document.getElementById('jenisSoal').value;
-    const kelas = document.getElementById('kelas').value;
 
-    if(!mapel || !tp) return alert("Lengkapi Mapel dan TP dulu Bos!");
+    if(!mapel || !tp) return alert("Isi data dulu!");
 
-    const loader = document.getElementById('loader');
-    loader.classList.add('show');
+    document.getElementById('loader').classList.add('show');
 
-    // Prompt diperketat agar AI tidak kirim teks sampah
-    const promptText = `HANYA balas dalam format JSON murni. Buatkan ${num} soal ${mapel} materi ${materi} kelas ${kelas}. Jenis: ${jenis}. Level Bloom: ${bloomVal}. TP: ${tp}. 
-    Struktur JSON: {"soal": [{"no": 1, "pertanyaan": "...", "opsi": ["A. ...", "B. ...", "C. ...", "D. ...", "E. ..."], "kunci": "..."}]}`;
+    const promptText = `Buatkan ${num} soal ${mapel} level ${bloomTerpilih} jenis ${jenis} untuk TP: ${tp}. Wajib JSON: {"soal": [{"no": 1, "pertanyaan": "...", "opsi": ["A", "B", "C"], "kunci": "..."}]}`;
 
     try {
         const res = await fetch('/api/generate', {
@@ -173,41 +166,33 @@ async function gasKeServer() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ prompt: promptText })
         });
-
+        
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Gagal mengambil data");
-
-        // PENGAMAN: Cek apakah data.soal ada dan berbentuk Array
-        if (data && data.soal && Array.isArray(data.soal)) {
+        
+        if(data && data.soal) {
             let html = "";
             data.soal.forEach(s => {
                 html += `<div class="soal-box">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                        <b style="color:var(--accent)">NO ${s.no || '?'}</b>
-                        <small style="opacity:0.5">${jenis} | ${bloomVal}</small>
-                    </div>
-                    <div style="line-height:1.6; margin-bottom:15px;">${s.pertanyaan || 'Gagal memuat pertanyaan'}</div>
-                    <div style="display: grid; gap: 8px;">
-                        ${s.opsi ? (Array.isArray(s.opsi) ? s.opsi.map(o => `<div style="padding:10px; background:var(--bg2); border:1px solid var(--border); border-radius:6px; font-size:14px;">${o}</div>`).join('') : '') : ''}
-                    </div>
-                    <div style="margin-top:20px; color:#3ecf8e; font-weight:bold; border-top: 1px dashed var(--border); padding-top:10px;">Kunci: ${s.kunci || '-'}</div>
+                    <b>NO ${s.no}</b><br>${s.pertanyaan}<br><br>
+                    ${s.opsi ? s.opsi.map(o => `<div>${o}</div>`).join('') : ''}
+                    <div style="color:cyan; margin-top:10px;">Kunci: ${s.kunci}</div>
                 </div>`;
             });
             document.getElementById('hasil-box').innerHTML = html;
             showScreen('hasil');
             document.getElementById('nav-hasil').style.display = 'block';
-        } else {
-            throw new Error("Format JSON dari AI tidak valid");
         }
     } catch(e) {
-        alert("Terjadi Kendala: " + e.message);
-        console.error(e);
+        alert("Error server: " + e.message);
     } finally {
-        loader.classList.remove('show');
+        document.getElementById('loader').classList.remove('show');
     }
 }
 
-window.onload = () => pilihLevel('C4');
+// 5. Inisialisasi saat pertama kali buka
+document.addEventListener('DOMContentLoaded', () => {
+    pilihLevel('C4');
+});
 </script>
 </body>
 </html>
