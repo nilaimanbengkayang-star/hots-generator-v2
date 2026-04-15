@@ -1,6 +1,6 @@
-{
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
+// ... kode fetch ke gemini ...
+const resultText = data.candidates[0].content.parts[0].text;
+// Kadang AI ngasih markdown ```json, kita bersihkan dulu
+const cleanJson = resultText.replace(/```json|```/g, '').trim();
+const resultJson = JSON.parse(cleanJson);
+res.status(200).json(resultJson);
